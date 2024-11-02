@@ -110,6 +110,7 @@ async function handleRequest(request) {
                     margin: 0 8px;
                     float:left;
                 }
+                ul li{line-height: 25px;}
             </style>
             <script>
                 let isFetching = false; // 请求标志
