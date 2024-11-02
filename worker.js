@@ -112,7 +112,12 @@ async function handleRequest(request) {
                 }
             </style>
             <script>
+                let isFetching = false; // 请求标志
+
                 async function fetchTodayData() {
+                    if (isFetching) return; // 如果正在请求，直接返回
+                    isFetching = true; // 设置请求标志
+
                     try {
                         const response = await fetch('https://uapis.cn/api/hotlist?type=history');
                         const data = await response.json();
@@ -135,6 +140,11 @@ async function handleRequest(request) {
                         document.body.appendChild(resultContainer);
                     } catch (error) {
                         console.error('获取数据时出错:', error);
+                    } finally {
+                        // 10秒后重置请求标志
+                        setTimeout(() => {
+                            isFetching = false;
+                        }, 10000);
                     }
                 }
             </script>
