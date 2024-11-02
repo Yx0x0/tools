@@ -88,6 +88,7 @@ async function handleRequest(request) {
             <title>TOOLS</title>
             <style>
                 body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+                .container { max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
                 .url-container { 
                     max-width: 600px; 
                     padding: 10px; 
@@ -110,12 +111,40 @@ async function handleRequest(request) {
                     float:left;
                 }
             </style>
+            <script>
+                async function fetchTodayData() {
+                    try {
+                        const response = await fetch('https://uapis.cn/api/hotlist?type=history');
+                        const data = await response.json();
+                        
+                        // 隐藏首页内容
+                        document.querySelector('.home').style.display = 'none';
+                        
+                        // 创建一个与 URL 转码相似的容器
+                        const resultContainer = document.createElement('div');
+                        resultContainer.className = 'container';
+                        resultContainer.innerHTML = '<h1>历史上的今天</h1><ul></ul><a href="/" style="display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #007BFF;">返回首页</a>';
+                        
+                        // 处理并展示数据
+                        const ul = resultContainer.querySelector('ul');
+                        data.data.forEach(item => {
+                            ul.innerHTML += \`<li>\${item.title}</li>\`; // 使用反引号
+                        });
+                        
+                        // 将结果容器添加到页面
+                        document.body.appendChild(resultContainer);
+                    } catch (error) {
+                        console.error('获取数据时出错:', error);
+                    }
+                }
+            </script>
         </head>
         <body>
             <div class="home">
                 <h1>简易 TOOLS</h1>
                 <div class="url-container"><a href="/encode">URL转码</a></div>
                 <div class="hotspot" onclick="alert('功能开发中');">今日热点</div>
+                <div class="hotspot" onclick="fetchTodayData();">那年今日</div>
             </div>
         </body>
         </html>
