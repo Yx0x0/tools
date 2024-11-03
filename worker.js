@@ -22,11 +22,11 @@ async function handleRequest(request) {
                         <title>URL 转码结果</title>
                         <style>
                             body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-                            .container { max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+                            .container { max-width: 760px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
                             h1 { color: #333; text-align: center; }
                             p { font-size: 18px; }
-                            a { text-decoration: none; color: #007BFF; }
-                            a:hover { text-decoration: underline; margin-top: 10px; }
+                            a { text-decoration: none; color: #007BFF; padding: 10px; border-radius: 4px; transition: background-color 0.3s; }
+                            a:hover { background-color: #0056b3; color: white; } /* 鼠标悬停时的样式 */
                         </style>
                     </head>
                     <body>
@@ -53,13 +53,14 @@ async function handleRequest(request) {
                 <title>URL 转码</title>
                 <style>
                     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-                    .container { max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+                    .container { max-width: 760px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
                     h1 { color: #333; text-align: center; }
                     form { margin-top: 20px; }
                     input[type="text"] { width: 96%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
                     button { padding: 10px 15px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
                     button:hover { background-color: #0056b3; }
-                    a { display: block; text-align: center; margin-top: 10px; }
+                    a { display: block; text-align: center; margin-top: 10px; text-decoration: none; color: #007BFF; padding: 10px; border-radius: 4px; transition: background-color 0.3s; }
+                    a:hover { background-color: #0056b3; color: white; } /* 鼠标悬停时的样式 */
                 </style>
             </head>
             <body>
@@ -90,16 +91,15 @@ async function handleRequest(request) {
                 body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
                 .container { max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
                 .url-container { 
-                    max-width: 600px; 
-                    padding: 10px; 
+                    max-width: 760px; 
                     background: white; 
                     border: 1px dashed #007BFF; /* 虚线边框 */
                     float: left; /* 左浮动 */
                     text-align: center; /* 文字居中 */
                 }
                 h1 { color: #333; text-align: center; }
-                a { display: block; text-decoration: none; color: #007BFF; }
-                a:hover { text-decoration: underline; }
+                a { display: block; text-decoration: none; color: #007BFF; padding: 10px; border-radius: 4px; transition: background-color 0.3s; }
+                a:hover { background-color: #0056b3; color: white; } /* 鼠标悬停时的样式 */
                 .home { width: 960px; margin: 0 auto; }
                 .hotspot { 
                     padding: 10px; 
@@ -111,6 +111,32 @@ async function handleRequest(request) {
                     float:left;
                 }
                 ul li{line-height: 25px;}
+                .loading {
+                    display: none;
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255, 255, 255, 0.8);
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                    z-index: 1000;
+                    text-align: center;
+                }
+                .loading .spinner {
+                    border: 8px solid #f3f3f3; /* Light grey */
+                    border-top: 8px solid #3498db; /* Blue */
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    animation: spin 1s linear infinite; /* 旋转动画 */
+                    margin: 0 auto 10px; /* 居中 */
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
             </style>
             <script>
                 let isFetching = false; // 请求标志
@@ -118,6 +144,13 @@ async function handleRequest(request) {
                 async function fetchTodayData() {
                     if (isFetching) return; // 如果正在请求，直接返回
                     isFetching = true; // 设置请求标志
+
+                    // 显示加载提示
+                    const loading = document.createElement('div');
+                    loading.className = 'loading';
+                    loading.innerHTML = '<div class="spinner"></div>加载中，请稍候...';
+                    document.body.appendChild(loading);
+                    loading.style.display = 'block';
 
                     try {
                         const response = await fetch('https://uapis.cn/api/hotlist?type=history');
@@ -133,7 +166,7 @@ async function handleRequest(request) {
                         
                         // 处理并展示数据
                         const ul = resultContainer.querySelector('ul');
-                        data.data.forEach(item => {
+                        data.data.slice(0, 20).forEach(item => { // 只显示前 20 条
                             ul.innerHTML += \`<li>\${item.title}</li>\`; // 使用反引号
                         });
                         
@@ -142,6 +175,83 @@ async function handleRequest(request) {
                     } catch (error) {
                         console.error('获取数据时出错:', error);
                     } finally {
+                        // 隐藏加载提示
+                        loading.style.display = 'none';
+                        // 10秒后重置请求标志
+                        setTimeout(() => {
+                            isFetching = false;
+                        }, 10000);
+                    }
+                }
+
+                async function fetchHotspotData() {
+                    if (isFetching) return; // 如果正在请求，直接返回
+                    isFetching = true; // 设置请求标志
+
+                    // 显示加载提示
+                    const loading = document.createElement('div');
+                    loading.className = 'loading';
+                    loading.innerHTML = '<div class="spinner"></div>加载中，请稍候...';
+                    document.body.appendChild(loading);
+                    loading.style.display = 'block';
+
+                    try {
+                        // 分别请求不同的热搜榜
+                        const bilibiliResponse = await fetch('https://uapis.cn/api/hotlist?type=bilibili');
+                        const zhihuResponse = await fetch('https://uapis.cn/api/hotlist?type=zhihu');
+                        const douyinResponse = await fetch('https://uapis.cn/api/hotlist?type=douyin');
+
+                        const bilibiliData = await bilibiliResponse.json();
+                        const zhihuData = await zhihuResponse.json();
+                        const douyinData = await douyinResponse.json();
+                        
+                        // 隐藏首页内容
+                        document.querySelector('.home').style.display = 'none';
+                        
+                        // 创建一个与 URL 转码相似的容器
+                        const resultContainer = document.createElement('div');
+                        resultContainer.className = 'container';
+                        resultContainer.innerHTML = \`
+                            <h1>今日热点</h1>
+                            <div style="display: flex; justify-content: space-between;">
+                                <div class="hotspot" style="flex: 1; margin-right: 10px;">
+                                    <h2>哔哩哔哩热搜榜</h2>
+                                    <ul></ul>
+                                </div>
+                                <div class="hotspot" style="flex: 1; margin-right: 10px;">
+                                    <h2>知乎热搜榜</h2>
+                                    <ul></ul>
+                                </div>
+                                <div class="hotspot" style="flex: 1;">
+                                    <h2>抖音热搜榜</h2>
+                                    <ul></ul>
+                                </div>
+                            </div>
+                            <a href="/" style="display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #007BFF;">返回首页</a>
+                        \`;
+                        
+                        // 处理并展示数据
+                        const bilibiliUl = resultContainer.querySelectorAll('div.hotspot')[0].querySelector('ul');
+                        const zhihuUl = resultContainer.querySelectorAll('div.hotspot')[1].querySelector('ul');
+                        const douyinUl = resultContainer.querySelectorAll('div.hotspot')[2].querySelector('ul');
+
+                        bilibiliData.data.slice(0, 20).forEach(item => { // 只显示前 20 条
+                            bilibiliUl.innerHTML += \`<li>\${item.title}</li>\`;
+                        });
+                        zhihuData.data.slice(0, 20).forEach(item => { // 只显示前 20 条
+                            zhihuUl.innerHTML += \`<li>\${item.title}</li>\`;
+                        });
+                        douyinData.data.slice(0, 20).forEach(item => { // 只显示前 20 条
+                            douyinUl.innerHTML += \`<li>\${item.title}</li>\`;
+                        });
+                        
+                        // 将结果容器添加到页面
+                        document.body.appendChild(resultContainer);
+                    } catch (error) {
+                        console.error('获取今日热点时出错:', error);
+                    } finally {
+                        // 隐藏加载提示
+                        loading.style.display = 'none';
                         // 10秒后重置请求标志
                         setTimeout(() => {
                             isFetching = false;
@@ -154,8 +264,8 @@ async function handleRequest(request) {
             <div class="home">
                 <h1>简易 TOOLS</h1>
                 <div class="url-container"><a href="/encode">URL转码</a></div>
-                <div class="hotspot" onclick="alert('功能开发中');">今日热点</div>
-                <div class="hotspot" onclick="fetchTodayData();">那年今日</div>
+                <a href="#" class="hotspot" onclick="fetchHotspotData();">今日热点</a>
+                <a href="#" class="hotspot" onclick="fetchTodayData();">那年今日</a>
             </div>
         </body>
         </html>
