@@ -137,6 +137,32 @@ async function handleRequest(request) {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
                 }
+                .tabs {
+                    display: flex;
+                    justify-content: center; /* 居中对齐 */
+                    margin: 20px;
+                }
+                .tabs button {
+                    padding: 10px 15px;
+                    margin: 0 5px; /* 添加按钮间距 */
+                    background-color: #007BFF;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.3s;
+                }
+                .tabs button:hover {
+                    background-color: #0056b3; /* 鼠标悬停时的样式 */
+                }
+                ul {
+                    list-style-type: decimal; /* 使用数字显示列表 */
+                    padding-left: 20px; /* 添加左侧内边距 */
+                }
+                .container,#resultContainer {
+                    max-width: 760px; /* 页面最大宽度 */
+                    margin: 0 auto; /* 内容居中 */
+                }
             </style>
             <script>
                 let isFetching = false; // 请求标志
@@ -258,6 +284,80 @@ async function handleRequest(request) {
                         }, 10000);
                     }
                 }
+
+                async function fetchRealTimeData() {
+                    // 清除原有内容
+                    const resultContainer = document.getElementById('resultContainer');
+                    if (resultContainer) {
+                        resultContainer.innerHTML = ''; // 清空结果容器
+                    }
+
+                    // 隐藏首页内容
+                    document.querySelector('.home').style.display = 'none';
+
+                    // 清除已有的 tabs
+                    const existingTabs = document.querySelector('.tabs');
+                    if (existingTabs) {
+                        existingTabs.remove(); // 移除已有的 tabs
+                    }
+
+                    // 创建新的标签页
+                    const tabs = \`
+                        <div class="tabs">
+                            <button onclick="fetchData('http://new.ixbk.net/plus/json/push_16.json', '赚客吧')">赚客吧</button>
+                            <button onclick="fetchData('http://new.ixbk.net/plus/json/push_17.json', '酷安')">酷安</button>
+                            <button onclick="fetchData('http://new.ixbk.net/plus/json/push_19.json', '值得买')">值得买</button>
+                        </div>
+                        <div id="resultContainer"></div>
+                    \`;
+                    document.body.insertAdjacentHTML('beforeend', tabs);
+
+                    // 默认加载第一个TAB的内容
+                    fetchData('http://new.ixbk.net/plus/json/push_16.json', '赚客吧');
+
+                    // 滚动到页面顶部
+                    window.scrollTo(0, 0);
+                }
+
+                async function fetchData(apiUrl, tabName) {
+                    try {
+                        const response = await fetch(apiUrl);
+                        const data = await response.json();
+                        const resultContainer = document.getElementById('resultContainer');
+                        resultContainer.innerHTML = \`<h2>\${tabName}</h2><ol></ol>\`; // 使用有序列表
+                        const ol = resultContainer.querySelector('ol'); // 获取 OL 元素
+                        data.forEach(item => {
+                            const fullUrl = \`http://new.ixbk.net\${item.url}\`;
+                            ol.innerHTML += \`<li><a href="\${fullUrl}" target="_blank">\${item.title}</a></li>\`; // 以 OL 展示数据
+                        });
+
+                        // 添加返回首页链接
+                        const backLink = document.createElement('a');
+                        backLink.textContent = '返回首页';
+                        backLink.href = '#'; // 设置为 #，以防止页面跳转
+                        backLink.onclick = () => {
+                            // 隐藏首页内容
+                            document.querySelector('.home').style.display = 'block'; 
+                            resultContainer.innerHTML = ''; // 清空结果容器
+                            // 清除已有的 tabs
+                            const existingTabs = document.querySelector('.tabs');
+                            if (existingTabs) {
+                                existingTabs.remove(); // 移除已有的 tabs
+                            }
+                        };
+                        backLink.style.display = 'block';
+                        backLink.style.margin = '20px auto';
+                        backLink.style.textAlign = 'center';
+                        backLink.style.color = '#007BFF';
+                        backLink.style.textDecoration = 'underline';
+                        resultContainer.appendChild(backLink); // 将链接添加到结果容器
+                    } catch (error) {
+                        console.error('获取数据时出错:', error);
+                    }
+                }
+
+                // 默认加载第一个TAB的内容
+                fetchRealTimeData(); // 触发实时线报的加载
             </script>
         </head>
         <body>
@@ -266,6 +366,7 @@ async function handleRequest(request) {
                 <div class="url-container"><a href="/encode">URL转码</a></div>
                 <a href="#" class="hotspot" onclick="fetchHotspotData();">今日热点</a>
                 <a href="#" class="hotspot" onclick="fetchTodayData();">那年今日</a>
+                <a href="#" class="hotspot" onclick="fetchRealTimeData();">实时线报</a>
             </div>
         </body>
         </html>
