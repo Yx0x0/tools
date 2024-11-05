@@ -10,14 +10,111 @@ async function handleRequest(request) {
     // 路由处理
     switch (url.pathname) {
         case '/encode':
+            if (request.method === 'POST') {
+                const formData = await request.formData();
+                const originalUrl = formData.get('url');
+                
+                if (originalUrl) {
+                    const encodedUrl = encodeURIComponent(originalUrl);
                     return new Response(`
                         <!DOCTYPE html>
                         <html>
                         <head>
                             <meta charset="utf-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>URL 转码结果</title>
+                            <style>
+                                body { 
+                                    font-family: Arial, sans-serif; 
+                                    margin: 0; 
+                                    padding: 0; 
+                                    background-color: #f4f4f4; 
+                                }
+                                .container {
+                                    max-width: 760px;
+                                    margin: 20px auto;
+                                    padding: 30px;
+                                    background: white;
+                                    border-radius: 12px;
+                                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+                                }
+                                h1 {
+                                    color: #333;
+                                    text-align: center;
+                                    margin-bottom: 30px;
+                                }
+                                .result-box {
+                                    margin: 20px 0;
+                                    padding: 15px;
+                                    background: #f8f9fa;
+                                    border-radius: 6px;
+                                    word-break: break-all;
+                                }
+                                .result-label {
+                                    font-weight: bold;
+                                    color: #555;
+                                    margin-bottom: 5px;
+                                }
+                                .result-content {
+                                    padding: 10px;
+                                    background: white;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    margin-top: 5px;
+                                }
+                                .back-link {
+                                    display: block;
+                                    text-align: center;
+                                    color: #007BFF;
+                                    text-decoration: none;
+                                    margin-top: 20px;
+                                    padding: 10px;
+                                    border-radius: 6px;
+                                }
+
+                                @media screen and (max-width: 768px) {
+                                    .container {
+                                        margin: 10px;
+                                        padding: 20px;
+                                    }
+                                    h1 {
+                                        font-size: 20px;
+                                    }
+                                    .result-box {
+                                        padding: 10px;
+                                    }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <h1>转码结果</h1>
+                                <div class="result-box">
+                                    <div class="result-label">原始 URL:</div>
+                                    <div class="result-content">${originalUrl}</div>
+                                    <div class="result-label" style="margin-top: 15px;">转码后的 URL:</div>
+                                    <div class="result-content">${encodedUrl}</div>
+                                </div>
+                                <a href="/encode" class="back-link">继续转码</a>
+                                <a href="/" class="back-link">返回首页</a>
+                            </div>
+                        </body>
+                        </html>
+                    `, {
+                        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                    });
+                }
+            }
+
+            // GET 请求返回表单页面
+            return new Response(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>URL 转码</title>
-                            <style>
+                    <style>
                         body { 
                             font-family: Arial, sans-serif; 
                             margin: 0; 
@@ -70,12 +167,6 @@ async function handleRequest(request) {
                         button:hover {
                             background-color: #0056b3;
                         }
-                        .result {
-                            margin-top: 20px;
-                            padding: 15px;
-                            background: #f8f9fa;
-                            border-radius: 6px;
-                        }
                         .back-link {
                             display: block;
                             text-align: center;
@@ -85,7 +176,6 @@ async function handleRequest(request) {
                             padding: 10px;
                         }
 
-                        /* 移动端适配 */
                         @media screen and (max-width: 768px) {
                             .container {
                                 margin: 10px;
@@ -93,7 +183,6 @@ async function handleRequest(request) {
                             }
                             h1 {
                                 font-size: 20px;
-                                margin-bottom: 20px;
                             }
                             input[type="text"] {
                                 font-size: 16px;
@@ -104,7 +193,6 @@ async function handleRequest(request) {
                             }
                         }
 
-                        /* 触摸设备优化 */
                         @media (hover: none) {
                             button:active {
                                 opacity: 0.8;
@@ -114,23 +202,23 @@ async function handleRequest(request) {
                                 background: #f0f0f0;
                             }
                         }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="container">
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
                         <h1>URL 转码工具</h1>
-                        <form method="POST">
+                        <form method="POST" action="/encode">
                             <label for="url">请输入需要转码的 URL:</label>
-                            <input type="text" id="url" name="url" required>
+                            <input type="text" id="url" name="url" required placeholder="请输入URL">
                             <button type="submit">转码</button>
                         </form>
                         <a href="/" class="back-link">返回首页</a>
-                            </div>
-                        </body>
-                        </html>
-                    `, {
-                        headers: { 'Content-Type': 'text/html; charset=utf-8' },
-                    });
+                    </div>
+                </body>
+                </html>
+            `, {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            });
 
         case '/realtime':
             return new Response(`
