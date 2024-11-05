@@ -309,7 +309,7 @@ async function handleRequest(request) {
                             100% { transform: rotate(360deg); }
                         }
 
-                        /* 移动端适配 */
+                        /* 端适配 */
                         @media screen and (max-width: 768px) {
                             .container {
                                 margin: 10px;
@@ -385,7 +385,7 @@ async function handleRequest(request) {
                             }
                         }
 
-                        // 默认加载赚客吧数据
+                        // 默认赚客数据
                         fetchData('http://new.ixbk.net/plus/json/push_16.json', '赚客吧');
                     </script>
                 </body>
@@ -424,7 +424,7 @@ async function handleRequest(request) {
                             text-align: center;
                         }
                         .input-group {
-                            margin: 25px 0;
+                            margin: 13px 0;
                             background: #f8f9fa;
                             padding: 20px;
                             border-radius: 8px;
@@ -438,7 +438,7 @@ async function handleRequest(request) {
                         input[type="date"],
                         input[type="number"],
                         select {
-                            width: 100%;
+                            width: 96%;
                             padding: 12px;
                             border: 1px solid #ddd;
                             border-radius: 6px;
@@ -449,7 +449,6 @@ async function handleRequest(request) {
                             display: flex;
                             justify-content: center;
                             gap: 15px;
-                            margin: 30px 0;
                         }
                         button {
                             padding: 12px 30px;
@@ -522,6 +521,123 @@ async function handleRequest(request) {
                                 background: #f0f0f0;
                             }
                         }
+
+                        input[type="date"] {
+                            width: 100%;
+                            padding: 12px;
+                            border: 1px solid #ddd;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            box-sizing: border-box;
+                            -webkit-appearance: none;
+                            background-color: #fff;
+                        }
+
+                        input[type="date"]::-webkit-calendar-picker-indicator {
+                            background: transparent;
+                            bottom: 0;
+                            color: transparent;
+                            cursor: pointer;
+                            height: auto;
+                            left: 0;
+                            position: absolute;
+                            right: 0;
+                            top: 0;
+                            width: auto;
+                        }
+
+                        input[type="date"]::before {
+                            content: attr(placeholder);
+                            color: #999;
+                        }
+
+                        input[type="date"]:valid::before {
+                            display: none;
+                        }
+
+                        .input-wrapper {
+                            display: flex;
+                            gap: 10px;
+                        }
+
+                        .input-wrapper input[type="number"] {
+                            flex: 2;
+                            width: auto;
+                        }
+
+                        .input-wrapper select {
+                            flex: 1;
+                            width: auto;
+                        }
+
+                        /* 移动端适配 */
+                        @media screen and (max-width: 768px) {
+                            input[type="date"] {
+                                font-size: 16px;
+                                padding: 10px;
+                            }
+                            
+                            .input-wrapper {
+                                flex-direction: row;
+                            }
+                            
+                            .input-wrapper input[type="number"],
+                            .input-wrapper select {
+                                font-size: 16px;
+                                padding: 10px;
+                            }
+                        }
+
+                        .date-input-container {
+                            position: relative;
+                            width: 100%;
+                        }
+
+                        .date-input-container input[type="date"] {
+                            width: 100%;
+                            padding: 12px;
+                            border: 1px solid #ddd;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            box-sizing: border-box;
+                            background-color: #fff;
+                            position: relative;
+                            z-index: 1;
+                        }
+
+                        /* 移除默认的日期选择器按钮 */
+                        .date-input-container input[type="date"]::-webkit-calendar-picker-indicator {
+                            position: absolute;
+                            right: 10px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                            z-index: 2;
+                        }
+
+                        /* 移动端适配 */
+                        @media screen and (max-width: 768px) {
+                            .date-input-container input[type="date"] {
+                                font-size: 16px;
+                                padding: 10px;
+                            }
+                        }
+
+                        .result-expired {
+                            background: #ffebee !important;
+                            color: #c62828 !important;
+                            padding: 15px;
+                            border-radius: 6px;
+                            text-align: center;
+                            margin-top: 20px;
+                        }
+                        .result-valid {
+                            background: #e8f5e9 !important;
+                            color: #2e7d32 !important;
+                            padding: 15px;
+                            border-radius: 6px;
+                            text-align: center;
+                            margin-top: 20px;
+                        }
                     </style>
                 </head>
                 <body>
@@ -529,13 +645,15 @@ async function handleRequest(request) {
                         <h1>保质期计算器</h1>
                         <div class="input-group">
                             <label for="productDate">生产日期</label>
-                            <input type="date" id="productDate">
+                            <div class="date-input-container">
+                                <input type="date" id="productDate">
+                            </div>
                         </div>
                         <div class="input-group">
                             <label>保质期</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="number" id="expiryValue" min="1" value="12" style="flex: 2;">
-                                <select id="expiryUnit" style="flex: 1;">
+                            <div class="input-wrapper">
+                                <input type="number" id="expiryValue" min="1" value="12">
+                                <select id="expiryUnit">
                                     <option value="months">月</option>
                                     <option value="days">天</option>
                                 </select>
@@ -543,56 +661,119 @@ async function handleRequest(request) {
                         </div>
                         <div id="result"></div>
                         <div class="button-group">
-                            <button onclick="calculateExpiry()">计算</button>
-                            <button onclick="resetForm()">重置</button>
+                            <button type="button" onclick="calculateExpiry()">计算</button>
+                            <button type="button" onclick="resetForm()">重置</button>
                         </div>
                         <a href="/" class="back-link">返回首页</a>
                     </div>
                     <script>
-                        // 计算函数
-                        function calculateExpiry() {
-                                const productDate = new Date(document.getElementById('productDate').value);
-                                const value = parseInt(document.getElementById('expiryValue').value);
-                                const unit = document.getElementById('expiryUnit').value;
-                                
-                                if(isNaN(productDate.getTime())) {
-                                    alert('请选择生产日期');
-                                    return;
+                        // 初始化日期为今天并设置最大日期
+                        function initDate() {
+                            const today = new Date();
+                            const dateString = today.toISOString().split('T')[0];
+                            const dateInput = document.getElementById('productDate');
+                            dateInput.value = dateString;
+                            dateInput.max = dateString; // 设置最大日期为今天
+
+                            // 监听期变化，确保不超过今天
+                            dateInput.addEventListener('change', function() {
+                                const selectedDate = new Date(this.value);
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0); // 设置时间为当天开始
+
+                                if (selectedDate > today) {
+                                    this.value = dateString;
+                                    alert('生产日期不能超过今天');
                                 }
-                                
-                                const expiryDate = new Date(productDate);
-                                if(unit === 'months') {
-                                    expiryDate.setMonth(expiryDate.getMonth() + value);
-                                } else {
-                                    expiryDate.setDate(expiryDate.getDate() + value);
-                                }
-                                
-                                const result = document.getElementById('result');
-                                result.innerHTML = '<div style="background: #e8f5e9; padding: 15px; border-radius: 6px; color: #2e7d32;">' +
-                                    '到期日期: ' + expiryDate.toLocaleDateString() +
-                                '</div>';
+                            });
                         }
 
-                        // 重置函数
+                        // 页面加载时初始化日期
+                        document.addEventListener('DOMContentLoaded', initDate);
+
+                        function calculateExpiry() {
+                            const dateInput = document.getElementById('productDate');
+                            const value = parseInt(document.getElementById('expiryValue').value);
+                            const unit = document.getElementById('expiryUnit').value;
+                            
+                            const productDate = new Date(dateInput.value);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+
+                            if (productDate > today) {
+                                alert('生产日期不能超过今天');
+                                dateInput.value = today.toISOString().split('T')[0];
+                                return;
+                            }
+
+                            const expiryDate = new Date(productDate);
+                            
+                            if(unit === 'months') {
+                                expiryDate.setMonth(expiryDate.getMonth() + value);
+                            } else {
+                                expiryDate.setDate(expiryDate.getDate() + value);
+                            }
+
+                            // 计算天数差异
+                            const currentDate = new Date();
+                            currentDate.setHours(0, 0, 0, 0);
+                            const timeDiff = expiryDate.getTime() - currentDate.getTime();
+                            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                            
+                            const result = document.getElementById('result');
+                            let resultHTML = '';
+
+                            if (daysDiff < 0) {
+                                // 已过期
+                                resultHTML = \`
+                                    <div class="result-expired">
+                                        <div style="font-size: 18px; margin-bottom: 10px;">已过期 \${Math.abs(daysDiff)} 天</div>
+                                        <div style="font-size: 14px;">
+                                            生产日期：\${productDate.toLocaleDateString()}<br>
+                                            到期日期：\${expiryDate.toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                \`;
+                            } else if (daysDiff === 0) {
+                                // 今天到期
+                                resultHTML = \`
+                                    <div class="result-expired">
+                                        <div style="font-size: 18px; margin-bottom: 10px;">今天到期</div>
+                                        <div style="font-size: 14px;">
+                                            生产日期：\${productDate.toLocaleDateString()}<br>
+                                            到期日期：\${expiryDate.toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                \`;
+                            } else {
+                                // 未过期
+                                resultHTML = \`
+                                    <div class="result-valid">
+                                        <div style="font-size: 18px; margin-bottom: 10px;">还有 \${daysDiff} 天到期</div>
+                                        <div style="font-size: 14px;">
+                                            生产日期：\${productDate.toLocaleDateString()}<br>
+                                            到期日期：\${expiryDate.toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                \`;
+                            }
+                            
+                            result.innerHTML = resultHTML;
+                        }
+
                         function resetForm() {
-                            document.getElementById('productDate').value = '';
+                            initDate(); // 重置为今天的日期
                             document.getElementById('expiryValue').value = '12';
                             document.getElementById('expiryUnit').value = 'months';
                             document.getElementById('result').innerHTML = '';
                         }
-                            
-                            // 添加按钮悬停效果
-                                const buttons = document.querySelectorAll('button');
-                                buttons.forEach(button => {
-                                    button.addEventListener('mouseover', () => {
-                                        button.style.opacity = '0.9';
-                                        button.style.transform = 'translateY(-1px)';
-                                    });
-                                    button.addEventListener('mouseout', () => {
-                                        button.style.opacity = '1';
-                                        button.style.transform = 'translateY(0)';
-                                    });
-                                });
+
+                        // 阻止按钮点击事件冒泡
+                        document.querySelectorAll('button').forEach(button => {
+                            button.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                            });
+                        });
                     </script>
                 </body>
                 </html>
@@ -615,99 +796,109 @@ async function handleRequest(request) {
                             padding: 0; 
                             background-color: #f4f4f4; 
                         }
-                        .container {
-                            max-width: 760px;
-                            margin: 20px auto;
+                        .container { 
+                            max-width: 760px; 
+                            margin: 20px auto; 
                             padding: 20px;
-                            background: white;
-                            border-radius: 12px;
-                            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
                         }
                         h1, h2 {
-                            color: #333;
                             text-align: center;
-                        }
-                        .hotspot-container {
-                            display: flex;
-                            gap: 20px;
-                            margin: 20px 0;
+                            color: #333;
                         }
                         .hotspot-section {
-                            flex: 1;
-                            background: #f8f9fa;
-                            padding: 15px;
+                            margin-bottom: 15px;
+                            background: #fff;
                             border-radius: 8px;
+                            padding: 15px;
                         }
                         ul {
-                            list-style: none;
-                            padding: 0;
                             margin: 0;
+                            padding-left: 20px;
                         }
                         li {
-                            padding: 10px;
-                            border-bottom: 1px solid #eee;
-                            font-size: 14px;
-                            line-height: 1.4;
-                        }
-                        .back-link {
-                            display: block;
-                            text-align: center;
-                            color: #007BFF;
-                            text-decoration: none;
-                            margin-top: 20px;
-                            padding: 10px;
-                        }
-                        .loading {
-                            text-align: center;
-                            padding: 20px;
-                        }
-                        .loading .spinner {
-                            border: 4px solid #f3f3f3;
-                            border-top: 4px solid #3498db;
-                            border-radius: 50%;
-                            width: 40px;
-                            height: 40px;
-                            animation: spin 1s linear infinite;
-                            margin: 0 auto;
-                        }
-                        @keyframes spin {
-                            0% { transform: rotate(0deg); }
-                            100% { transform: rotate(360deg); }
+                            margin: 8px 0;
                         }
 
-                        /* 移动端适配 */
                         @media screen and (max-width: 768px) {
                             .container {
                                 margin: 10px;
                                 padding: 15px;
                             }
-                            .hotspot-container {
-                                flex-direction: column;
-                                gap: 15px;
+                            .hotspot-header {
+                                padding: 15px;
+                                background: #f8f9fa;
+                                cursor: pointer;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
                             }
-                            h1 {
-                                font-size: 20px;
+                            .hotspot-content {
+                                display: none;
+                                padding: 10px 15px;
                             }
-                            h2 {
-                                font-size: 18px;
+                            .hotspot-content.active {
+                                display: block;
                             }
-                            li {
-                                padding: 12px 10px;
-                                font-size: 15px;
+                            .arrow {
+                                transition: transform 0.3s;
                             }
-                            .hotspot-section {
-                                padding: 10px;
+                            .arrow.active {
+                                transform: rotate(180deg);
+                            }
+                            .hotspot-container-web {
+                                display: none;
                             }
                         }
 
-                        /* 触摸设备优化 */
-                        @media (hover: none) {
-                            li:active {
-                                background: #f0f0f0;
+                        @media screen and (min-width: 769px) {
+                            .hotspot-container-mobile {
+                                display: none;
                             }
-                            .back-link:active {
-                                background: #f0f0f0;
+                            .hotspot-container-web > div {
+                                display: flex;
+                                gap: 20px;
                             }
+                            .hotspot-section {
+                                flex: 1;
+                            }
+                        }
+
+                        /* 添加链接样式 */
+                        a:hover,
+                        a:active,
+                        a:visited,
+                        a:link {
+                            text-decoration: none;
+                        }
+
+                        /* 热搜列表样式 */
+                        ul {
+                            list-style-type: decimal;
+                            margin: 0;
+                            padding-left: 30px;
+                        }
+
+                        /* 热搜链接颜色 */
+                        .hotspot-section li a {
+                            color: #000;
+                        }
+
+                        /* 返回首页链接样式 */
+                        .back-link {
+                            display: block;
+                            text-align: center;
+                            margin: 20px auto;
+                            color: #007BFF;
+                        }
+
+                        /* 列表项悬停效果 */
+                        li {
+                            margin: 8px 0;
+                            padding: 5px;
+                        }
+
+                        li:hover {
+                            border-bottom: 1px dashed #ccc;
                         }
                     </style>
                 </head>
@@ -715,8 +906,8 @@ async function handleRequest(request) {
                     <div class="container">
                         <h1>今日热点</h1>
                         <div id="content">
-                    <div class="loading">
-                        <div class="spinner"></div>
+                            <div class="loading">
+                                <div class="spinner"></div>
                                 <p>加载中...</p>
                             </div>
                         </div>
@@ -738,38 +929,103 @@ async function handleRequest(request) {
                                 ]);
 
                                 const content = document.getElementById('content');
-                                content.innerHTML = \`
-                                    <div class="hotspot-container">
-                                        <div class="hotspot-section">
-                                            <h2>哔哩哔哩热搜</h2>
-                                            <ul>
-                                                \${bilibiliData.data.slice(0, 20).map(item => \`
-                                                    <li>\${item.title}</li>
-                                                \`).join('')}
-                                            </ul>
-                                        </div>
-                                        <div class="hotspot-section">
-                                            <h2>知乎热搜</h2>
-                                            <ul>
-                                                \${zhihuData.data.slice(0, 20).map(item => \`
-                                                    <li>\${item.title}</li>
-                                                \`).join('')}
-                                            </ul>
-                                        </div>
-                                        <div class="hotspot-section">
-                                            <h2>抖音热搜</h2>
-                                            <ul>
-                                                \${douyinData.data.slice(0, 20).map(item => \`
-                                                    <li>\${item.title}</li>
-                                                \`).join('')}
-                                            </ul>
+                                
+                                const webContent = \`
+                                    <div class="hotspot-container-web">
+                                        <div>
+                                            <div class="hotspot-section">
+                                                <h2>哔哩哔哩热搜</h2>
+                                                <ul>\${bilibiliData.data.slice(0, 20).map(item => 
+                                                    \`<li><a href="https://search.bilibili.com/all?keyword=\${encodeURIComponent(item.title)}" target="_blank">\${item.title}</a></li>\`
+                                                ).join('')}</ul>
+                                            </div>
+                                            <div class="hotspot-section">
+                                                <h2>知乎热搜</h2>
+                                                <ul>\${zhihuData.data.slice(0, 20).map(item => 
+                                                    \`<li><a href="https://www.zhihu.com/search?type=content&q=\${encodeURIComponent(item.title)}" target="_blank">\${item.title}</a></li>\`
+                                                ).join('')}</ul>
+                                            </div>
+                                            <div class="hotspot-section">
+                                                <h2>抖音热搜</h2>
+                                                <ul>\${douyinData.data.slice(0, 20).map(item => 
+                                                    \`<li><a href="https://www.douyin.com/search/\${encodeURIComponent(item.title)}" target="_blank">\${item.title}</a></li>\`
+                                                ).join('')}</ul>
+                                            </div>
                                         </div>
                                     </div>
                                 \`;
+
+                                const mobileContent = \`
+                                    <div class="hotspot-container-mobile">
+                                        <div class="hotspot-section">
+                                            <div class="hotspot-header" onclick="toggleSection(this)">
+                                                <h2>哔哩哔哩热搜</h2>
+                                                <span class="arrow">▼</span>
+                                            </div>
+                                            <div class="hotspot-content">
+                                                <ul>\${bilibiliData.data.slice(0, 20).map(item => 
+                                                    \`<li><a href="https://search.bilibili.com/all?keyword=\${encodeURIComponent(item.title)}" target="_blank">\${item.title}</a></li>\`
+                                                ).join('')}</ul>
+                                            </div>
+                                        </div>
+                                        <div class="hotspot-section">
+                                            <div class="hotspot-header" onclick="toggleSection(this)">
+                                                <h2>知乎热搜</h2>
+                                                <span class="arrow">▼</span>
+                                            </div>
+                                            <div class="hotspot-content">
+                                                <ul>\${zhihuData.data.slice(0, 20).map(item => 
+                                                    \`<li><a href="https://www.zhihu.com/search?type=content&q=\${encodeURIComponent(item.title)}" target="_blank">\${item.title}</a></li>\`
+                                                ).join('')}</ul>
+                                            </div>
+                                        </div>
+                                        <div class="hotspot-section">
+                                            <div class="hotspot-header" onclick="toggleSection(this)">
+                                                <h2>抖音热搜</h2>
+                                                <span class="arrow">▼</span>
+                                            </div>
+                                            <div class="hotspot-content">
+                                                <ul>\${douyinData.data.slice(0, 20).map(item => 
+                                                    \`<li><a href="https://www.douyin.com/search/\${encodeURIComponent(item.title)}" target="_blank">\${item.title}</a></li>\`
+                                                ).join('')}</ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                \`;
+
+                                content.innerHTML = webContent + mobileContent;
+
+                                if (window.innerWidth <= 768) {
+                                    const firstHeader = document.querySelector('.hotspot-container-mobile .hotspot-header');
+                                    if (firstHeader) {
+                                        toggleSection(firstHeader);
+                                    }
+                                }
                             } catch (error) {
                                 console.error('获取数据失败:', error);
-                                document.getElementById('content').innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败，请稍后重试</p>';
+                                content.innerHTML = '<p style="text-align: center; color: #dc3545; padding: 20px;">加载失败，请稍后重试</p>';
                             }
+                        }
+
+                        function toggleSection(header) {
+                            const content = header.nextElementSibling;
+                            const arrow = header.querySelector('.arrow');
+                            const allContents = document.querySelectorAll('.hotspot-content');
+                            const allArrows = document.querySelectorAll('.arrow');
+                            
+                            allContents.forEach(item => {
+                                if (item !== content) {
+                                    item.classList.remove('active');
+                                }
+                            });
+                            allArrows.forEach(item => {
+                                if (item !== arrow) {
+                                    item.classList.remove('active');
+                                }
+                            });
+
+                            content.classList.toggle('active');
+                            arrow.classList.toggle('active');
                         }
 
                         fetchHotspotData();
@@ -942,11 +1198,10 @@ async function handleRequest(request) {
                             text-align: center;
                             color: #333;
                             margin-bottom: 30px;
-                            font-size: 24px;
                         }
                         .module {
                             float: left;
-                            width: calc(32% - 4px);
+                            width: calc(31% - 4px);
                             margin: 5px;
                             padding: 15px 0;
                             background: white;
@@ -985,8 +1240,8 @@ async function handleRequest(request) {
                             display: table;
                         }
 
-                        /* 移动端响应式样式 */
-                        @media screen and (max-width: 768px) {
+                        /* 移动端适配 */
+                        @media screen and (max-width: 480px) {
                             .container {
                                 margin: 10px;
                                 padding: 10px;
@@ -996,41 +1251,21 @@ async function handleRequest(request) {
                                 margin-bottom: 20px;
                             }
                             .module {
-                                width: calc(50% - 4px); /* 两列布局 */
-                                padding: 12px 0;
-                                font-size: 14px;
-                                margin-bottom: 4px;
+                                float: none;
+                                width: calc(100% - 4px);
+                                display: block;
+                                margin: 8px 2px;
+                                box-sizing: border-box;
+                            }
+                            .clearfix {
+                                display: flex;
+                                flex-direction: column;
+                                gap: 8px;
                             }
                         }
 
-                        @media screen and (max-width: 480px) {
-                            .container {
-                                margin: 5px;
-                                padding: 5px;
-                            }
-                            h1 {
-                                font-size: 18px;
-                                margin-bottom: 15px;
-                            }
-                            .module {
-                                width: calc(100% - 4px); /* 单列布局 */
-                                padding: 15px 0;
-                                margin-bottom: 6px;
-                                font-size: 16px;
-                            }
-                            /* 移动端触摸反馈 */
-                            .module:active {
-                                background: #007bff;
-                                color: white;
-                                transform: scale(0.98);
-                            }
-                        }
-
-                        /* 优化触摸体验 */
+                        /* 触摸设备优化 */
                         @media (hover: none) {
-                            .module:hover {
-                                transform: none;
-                            }
                             .module:active {
                                 background: #007bff;
                                 color: white;
