@@ -7,370 +7,973 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
     const url = new URL(request.url);
 
-    if (url.pathname === '/encode') {
-        if (request.method === 'POST') {
-            const formData = await request.formData();
-            const originalUrl = formData.get('url'); // 从表单数据获取 URL
+    // 路由处理
+    switch (url.pathname) {
+        case '/encode':
+                    return new Response(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>URL 转码</title>
+                            <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background-color: #f4f4f4; 
+                        }
+                        .container {
+                            max-width: 760px;
+                            margin: 20px auto;
+                            padding: 30px;
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+                        }
+                        h1 {
+                            color: #333;
+                            text-align: center;
+                            margin-bottom: 30px;
+                        }
+                        form {
+                            margin-top: 20px;
+                        }
+                        label {
+                            display: block;
+                            margin-bottom: 10px;
+                            color: #555;
+                            font-weight: bold;
+                        }
+                        input[type="text"] {
+                            width: 100%;
+                            padding: 12px;
+                            margin: 10px 0;
+                            border: 1px solid #ddd;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            box-sizing: border-box;
+                        }
+                        button {
+                            width: 100%;
+                            padding: 12px;
+                            background-color: #007BFF;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 16px;
+                            margin-top: 10px;
+                            transition: all 0.3s;
+                        }
+                        button:hover {
+                            background-color: #0056b3;
+                        }
+                        .result {
+                            margin-top: 20px;
+                            padding: 15px;
+                            background: #f8f9fa;
+                            border-radius: 6px;
+                        }
+                        .back-link {
+                            display: block;
+                            text-align: center;
+                            color: #007BFF;
+                            text-decoration: none;
+                            margin-top: 20px;
+                            padding: 10px;
+                        }
 
-            if (originalUrl) {
-                const encodedUrl = encodeURIComponent(originalUrl);
-                return new Response(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="utf-8">
-                        <title>URL 转码结果</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-                            .container { max-width: 760px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
-                            h1 { color: #333; text-align: center; }
-                            p { font-size: 18px; }
-                            a { text-decoration: none; color: #007BFF; padding: 10px; border-radius: 4px; transition: background-color 0.3s; }
-                            a:hover { background-color: #0056b3; color: white; } /* 鼠标悬停时的样式 */
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <h1>转码结果</h1>
-                            <p>原始 URL: <strong>${originalUrl}</strong></p>
-                            <p>转码后的 URL: <strong>${encodedUrl}</strong></p>
-                            <a href="/">返回首页</a>
-                        </div>
-                    </body>
-                    </html>
-                `, {
-                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-                });
-            }
-        }
+                        /* 移动端适配 */
+                        @media screen and (max-width: 768px) {
+                            .container {
+                                margin: 10px;
+                                padding: 20px;
+                            }
+                            h1 {
+                                font-size: 20px;
+                                margin-bottom: 20px;
+                            }
+                            input[type="text"] {
+                                font-size: 16px;
+                                padding: 10px;
+                            }
+                            button {
+                                padding: 15px;
+                            }
+                        }
 
-        // 返回包含输入表单的 HTML
-        return new Response(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>URL 转码</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-                    .container { max-width: 760px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
-                    h1 { color: #333; text-align: center; }
-                    form { margin-top: 20px; }
-                    input[type="text"] { width: 96%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
-                    button { padding: 10px 15px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
-                    button:hover { background-color: #0056b3; }
-                    a { display: block; text-align: center; margin-top: 10px; text-decoration: none; color: #007BFF; padding: 10px; border-radius: 4px; transition: background-color 0.3s; }
-                    a:hover { background-color: #0056b3; color: white; } /* 鼠标悬停时的样式 */
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>URL 转码</h1>
-                    <form method="POST">
-                        <label for="url">请输入 URL:</label>
-                        <input type="text" id="url" name="url" required>
-                        <button type="submit">转码</button>
-                    </form>
-                    <a href="/">返回首页</a>
-                </div>
-            </body>
-            </html>
-        `, {
-            headers: { 'Content-Type': 'text/html; charset=utf-8' },
-        });
-    }
-
-    // 首页显示 URL 转码入口
-    return new Response(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <title>TOOLS</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-                .container { max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
-                .url-container { 
-                    max-width: 760px; 
-                    background: white; 
-                    border: 1px dashed #007BFF; /* 虚线边框 */
-                    float: left; /* 左浮动 */
-                    text-align: center; /* 文字居中 */
-                }
-                h1 { color: #333; text-align: center; }
-                a { display: block; text-decoration: none; color: #007BFF; padding: 10px; border-radius: 4px; transition: background-color 0.3s; }
-                a:hover { background-color: #0056b3; color: white; } /* 鼠标悬停时的样式 */
-                .home { width: 960px; margin: 0 auto; }
-                .hotspot { 
-                    padding: 10px; 
-                    background: white; 
-                    border: 1px dashed #ccc; 
-                    text-align: center; 
-                    cursor: pointer; 
-                    margin: 0 8px;
-                    float:left;
-                }
-                ul li{line-height: 25px;}
-                .loading {
-                    display: none;
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: rgba(255, 255, 255, 0.8);
-                    padding: 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                    z-index: 1000;
-                    text-align: center;
-                }
-                .loading .spinner {
-                    border: 8px solid #f3f3f3; /* Light grey */
-                    border-top: 8px solid #3498db; /* Blue */
-                    border-radius: 50%;
-                    width: 40px;
-                    height: 40px;
-                    animation: spin 1s linear infinite; /* 旋转动画 */
-                    margin: 0 auto 10px; /* 居中 */
-                }
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-                .tabs {
-                    display: flex;
-                    justify-content: center; /* 居中对齐 */
-                    margin: 20px;
-                }
-                .tabs button {
-                    padding: 10px 15px;
-                    margin: 0 5px; /* 添加按钮间距 */
-                    background-color: #007BFF;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: background-color 0.3s;
-                }
-                .tabs button:hover {
-                    background-color: #0056b3; /* 鼠标悬停时的样式 */
-                }
-                ul {
-                    list-style-type: decimal; /* 使用数字显示列表 */
-                    padding-left: 20px; /* 添加左侧内边距 */
-                }
-                .container,#resultContainer {
-                    max-width: 760px; /* 页面最大宽度 */
-                    margin: 0 auto; /* 内容居中 */
-                }
-            </style>
-            <script>
-                let isFetching = false; // 请求标志
-
-                async function fetchTodayData() {
-                    if (isFetching) return; // 如果正在请求，直接返回
-                    isFetching = true; // 设置请求标志
-
-                    // 显示加载提示
-                    const loading = document.createElement('div');
-                    loading.className = 'loading';
-                    loading.innerHTML = '<div class="spinner"></div>加载中，请稍候...';
-                    document.body.appendChild(loading);
-                    loading.style.display = 'block';
-
-                    try {
-                        const response = await fetch('https://uapis.cn/api/hotlist?type=history');
-                        const data = await response.json();
-                        
-                        // 隐藏首页内容
-                        document.querySelector('.home').style.display = 'none';
-                        
-                        // 创建一个与 URL 转码相似的容器
-                        const resultContainer = document.createElement('div');
-                        resultContainer.className = 'container';
-                        resultContainer.innerHTML = '<h1>历史上的今天</h1><ul></ul><a href="/" style="display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #007BFF;">返回首页</a>';
-                        
-                        // 处理并展示数据
-                        const ul = resultContainer.querySelector('ul');
-                        data.data.slice(0, 20).forEach(item => { // 只显示前 20 条
-                            ul.innerHTML += \`<li>\${item.title}</li>\`; // 使用反引号
-                        });
-                        
-                        // 将结果容器添加到页面
-                        document.body.appendChild(resultContainer);
-                    } catch (error) {
-                        console.error('获取数据时出错:', error);
-                    } finally {
-                        // 隐藏加载提示
-                        loading.style.display = 'none';
-                        // 10秒后重置请求标志
-                        setTimeout(() => {
-                            isFetching = false;
-                        }, 10000);
-                    }
-                }
-
-                async function fetchHotspotData() {
-                    if (isFetching) return; // 如果正在请求，直接返回
-                    isFetching = true; // 设置请求标志
-
-                    // 显示加载提示
-                    const loading = document.createElement('div');
-                    loading.className = 'loading';
-                    loading.innerHTML = '<div class="spinner"></div>加载中，请稍候...';
-                    document.body.appendChild(loading);
-                    loading.style.display = 'block';
-
-                    try {
-                        // 分别请求不同的热搜榜
-                        const bilibiliResponse = await fetch('https://uapis.cn/api/hotlist?type=bilibili');
-                        const zhihuResponse = await fetch('https://uapis.cn/api/hotlist?type=zhihu');
-                        const douyinResponse = await fetch('https://uapis.cn/api/hotlist?type=douyin');
-
-                        const bilibiliData = await bilibiliResponse.json();
-                        const zhihuData = await zhihuResponse.json();
-                        const douyinData = await douyinResponse.json();
-                        
-                        // 隐藏首页内容
-                        document.querySelector('.home').style.display = 'none';
-                        
-                        // 创建一个与 URL 转码相似的容器
-                        const resultContainer = document.createElement('div');
-                        resultContainer.className = 'container';
-                        resultContainer.innerHTML = \`
-                            <h1>今日热点</h1>
-                            <div style="display: flex; justify-content: space-between;">
-                                <div class="hotspot" style="flex: 1; margin-right: 10px;">
-                                    <h2>哔哩哔哩热搜榜</h2>
-                                    <ul></ul>
-                                </div>
-                                <div class="hotspot" style="flex: 1; margin-right: 10px;">
-                                    <h2>知乎热搜榜</h2>
-                                    <ul></ul>
-                                </div>
-                                <div class="hotspot" style="flex: 1;">
-                                    <h2>抖音热搜榜</h2>
-                                    <ul></ul>
-                                </div>
+                        /* 触摸设备优化 */
+                        @media (hover: none) {
+                            button:active {
+                                opacity: 0.8;
+                                transform: scale(0.98);
+                            }
+                            .back-link:active {
+                                background: #f0f0f0;
+                            }
+                        }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                        <h1>URL 转码工具</h1>
+                        <form method="POST">
+                            <label for="url">请输入需要转码的 URL:</label>
+                            <input type="text" id="url" name="url" required>
+                            <button type="submit">转码</button>
+                        </form>
+                        <a href="/" class="back-link">返回首页</a>
                             </div>
-                            <a href="/" style="display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #007BFF;">返回首页</a>
-                        \`;
-                        
-                        // 处理并展示数据
-                        const bilibiliUl = resultContainer.querySelectorAll('div.hotspot')[0].querySelector('ul');
-                        const zhihuUl = resultContainer.querySelectorAll('div.hotspot')[1].querySelector('ul');
-                        const douyinUl = resultContainer.querySelectorAll('div.hotspot')[2].querySelector('ul');
+                        </body>
+                        </html>
+                    `, {
+                        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                    });
 
-                        bilibiliData.data.slice(0, 20).forEach(item => { // 只显示前 20 条
-                            bilibiliUl.innerHTML += \`<li>\${item.title}</li>\`;
-                        });
-                        zhihuData.data.slice(0, 20).forEach(item => { // 只显示前 20 条
-                            zhihuUl.innerHTML += \`<li>\${item.title}</li>\`;
-                        });
-                        douyinData.data.slice(0, 20).forEach(item => { // 只显示前 20 条
-                            douyinUl.innerHTML += \`<li>\${item.title}</li>\`;
-                        });
-                        
-                        // 将结果容器添加到页面
-                        document.body.appendChild(resultContainer);
-                    } catch (error) {
-                        console.error('获取今日热点时出错:', error);
-                    } finally {
-                        // 隐藏加载提示
-                        loading.style.display = 'none';
-                        // 10秒后重置请求标志
-                        setTimeout(() => {
-                            isFetching = false;
-                        }, 10000);
-                    }
-                }
+        case '/realtime':
+            return new Response(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+                    <title>实时线报</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background-color: #f4f4f4; 
+                        }
+                        .container {
+                            max-width: 760px;
+                            margin: 20px auto;
+                            padding: 20px;
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+                        }
+                        h1, h2 {
+                            color: #333;
+                            text-align: center;
+                        }
+                        .tabs {
+                            display: flex;
+                            justify-content: center;
+                            gap: 10px;
+                            margin: 20px 0;
+                            flex-wrap: wrap;
+                        }
+                        .tabs button {
+                            padding: 10px 20px;
+                            border: none;
+                            border-radius: 6px;
+                            background: #007bff;
+                            color: white;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                        }
+                        .tabs button:hover {
+                            background: #0056b3;
+                        }
+                        .news-list {
+                            list-style: decimal;
+                            padding-left: 20px;
+                        }
+                        .news-item {
+                            padding: 12px 0;
+                            border-bottom: 1px solid #eee;
+                        }
+                        .news-item a {
+                            color: #333;
+                            text-decoration: none;
+                            transition: color 0.3s;
+                        }
+                        .news-item a:hover {
+                            color: #007bff;
+                        }
+                        .back-link {
+                            display: block;
+                            text-align: center;
+                            color: #007BFF;
+                            text-decoration: none;
+                            margin-top: 20px;
+                            padding: 10px;
+                        }
+                        .loading {
+                            text-align: center;
+                            padding: 20px;
+                        }
+                        .loading .spinner {
+                            border: 4px solid #f3f3f3;
+                            border-top: 4px solid #3498db;
+                            border-radius: 50%;
+                            width: 40px;
+                            height: 40px;
+                            animation: spin 1s linear infinite;
+                            margin: 0 auto 10px;
+                        }
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
 
-                async function fetchRealTimeData() {
-                    // 清除原有内容
-                    const resultContainer = document.getElementById('resultContainer');
-                    if (resultContainer) {
-                        resultContainer.innerHTML = ''; // 清空结果容器
-                    }
+                        /* 移动端适配 */
+                        @media screen and (max-width: 768px) {
+                            .container {
+                                margin: 10px;
+                                padding: 15px;
+                            }
+                            h1 {
+                                font-size: 20px;
+                            }
+                            h2 {
+                                font-size: 18px;
+                            }
+                            .tabs button {
+                                width: calc(50% - 10px);
+                                padding: 12px 0;
+                                font-size: 14px;
+                            }
+                            .news-item {
+                                padding: 15px 0;
+                                font-size: 15px;
+                            }
+                        }
 
-                    // 隐藏首页内容
-                    document.querySelector('.home').style.display = 'none';
-
-                    // 清除已有的 tabs
-                    const existingTabs = document.querySelector('.tabs');
-                    if (existingTabs) {
-                        existingTabs.remove(); // 移除已有的 tabs
-                    }
-
-                    // 创建新的标签页
-                    const tabs = \`
+                        /* 触摸设备优化 */
+                        @media (hover: none) {
+                            .tabs button:active {
+                                opacity: 0.8;
+                                transform: scale(0.98);
+                            }
+                            .news-item:active {
+                                background: #f8f9fa;
+                            }
+                            .back-link:active {
+                                background: #f0f0f0;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>实时线报</h1>
                         <div class="tabs">
                             <button onclick="fetchData('http://new.ixbk.net/plus/json/push_16.json', '赚客吧')">赚客吧</button>
                             <button onclick="fetchData('http://new.ixbk.net/plus/json/push_17.json', '酷安')">酷安</button>
                             <button onclick="fetchData('http://new.ixbk.net/plus/json/push_19.json', '值得买')">值得买</button>
+                    </div>
+                        <div id="resultContainer">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>加载中...</p>
+                            </div>
                         </div>
-                        <div id="resultContainer"></div>
-                    \`;
-                    document.body.insertAdjacentHTML('beforeend', tabs);
+                        <a href="/" class="back-link">返回首页</a>
+                    </div>
+                    <script>
+                        async function fetchData(apiUrl, tabName) {
+                            const resultContainer = document.getElementById('resultContainer');
+                            resultContainer.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
 
-                    // 默认加载第一个TAB的内容
-                    fetchData('http://new.ixbk.net/plus/json/push_16.json', '赚客吧');
-
-                    // 滚动到页面顶部
-                    window.scrollTo(0, 0);
-                }
-
-                async function fetchData(apiUrl, tabName) {
-                    try {
-                        const response = await fetch(apiUrl);
-                        const data = await response.json();
-                        const resultContainer = document.getElementById('resultContainer');
-                        resultContainer.innerHTML = \`<h2>\${tabName}</h2><ol></ol>\`; // 使用有序列表
-                        const ol = resultContainer.querySelector('ol'); // 获取 OL 元素
-                        data.forEach(item => {
-                            const fullUrl = \`http://new.ixbk.net\${item.url}\`;
-                            ol.innerHTML += \`<li><a href="\${fullUrl}" target="_blank">\${item.title}</a></li>\`; // 以 OL 展示数据
-                        });
-
-                        // 添加返回首页链接
-                        const backLink = document.createElement('a');
-                        backLink.textContent = '返回首页';
-                        backLink.href = '#'; // 设置为 #，以防止页面跳转
-                        backLink.onclick = () => {
-                            // 隐藏首页内容
-                            document.querySelector('.home').style.display = 'block'; 
-                            resultContainer.innerHTML = ''; // 清空结果容器
-                            // 清除已有的 tabs
-                            const existingTabs = document.querySelector('.tabs');
-                            if (existingTabs) {
-                                existingTabs.remove(); // 移除已有的 tabs
+                            try {
+                                const response = await fetch(apiUrl);
+                                const data = await response.json();
+                                
+                                let html = '<h2>' + tabName + '</h2><ol class="news-list">';
+                                data.forEach(item => {
+                                    const fullUrl = 'http://new.ixbk.net' + item.url;
+                                    html += '<li class="news-item"><a href="' + fullUrl + '" target="_blank">' + item.title + '</a></li>';
+                                });
+                                html += '</ol>';
+                                
+                                resultContainer.innerHTML = html;
+                            } catch (error) {
+                                resultContainer.innerHTML = '<p style="text-align: center; color: #dc3545; padding: 20px;">加载失败，请稍后重试</p>';
                             }
-                        };
-                        backLink.style.display = 'block';
-                        backLink.style.margin = '20px auto';
-                        backLink.style.textAlign = 'center';
-                        backLink.style.color = '#007BFF';
-                        backLink.style.textDecoration = 'underline';
-                        resultContainer.appendChild(backLink); // 将链接添加到结果容器
-                    } catch (error) {
-                        console.error('获取数据时出错:', error);
-                    }
-                }
+                        }
 
-                // 默认加载第一个TAB的内容
-                fetchRealTimeData(); // 触发实时线报的加载
-            </script>
-        </head>
-        <body>
-            <div class="home">
-                <h1>简易 TOOLS</h1>
-                <div class="url-container"><a href="/encode">URL转码</a></div>
-                <a href="#" class="hotspot" onclick="fetchHotspotData();">今日热点</a>
-                <a href="#" class="hotspot" onclick="fetchTodayData();">那年今日</a>
-                <a href="#" class="hotspot" onclick="fetchRealTimeData();">实时线报</a>
-            </div>
-        </body>
-        </html>
-    `, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
-    });
+                        // 默认加载赚客吧数据
+                        fetchData('http://new.ixbk.net/plus/json/push_16.json', '赚客吧');
+                    </script>
+                </body>
+                </html>
+            `, {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            });
+            
+        case '/bzq':
+            return new Response(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>保质期计算器</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background-color: #f4f4f4; 
+                        }
+                        .container {
+                            max-width: 760px;
+                            margin: 20px auto;
+                            padding: 30px;
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+                        }
+                        h1 {
+                            color: #333;
+                            margin-bottom: 30px;
+                            font-size: 24px;
+                            text-align: center;
+                        }
+                        .input-group {
+                            margin: 25px 0;
+                            background: #f8f9fa;
+                            padding: 20px;
+                            border-radius: 8px;
+                        }
+                        label {
+                            display: block;
+                            margin-bottom: 10px;
+                            color: #555;
+                            font-weight: bold;
+                        }
+                        input[type="date"],
+                        input[type="number"],
+                        select {
+                            width: 100%;
+                            padding: 12px;
+                            border: 1px solid #ddd;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            margin-bottom: 10px;
+                        }
+                        .button-group {
+                            display: flex;
+                            justify-content: center;
+                            gap: 15px;
+                            margin: 30px 0;
+                        }
+                        button {
+                            padding: 12px 30px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            min-width: 120px;
+                        }
+                        button:first-child {
+                            background: #007bff;
+                            color: white;
+                        }
+                        button:last-child {
+                            background: #6c757d;
+                            color: white;
+                        }
+                        #result {
+                            margin: 25px 0;
+                            padding: 20px;
+                            font-size: 18px;
+                            text-align: center;
+                        }
+                        .back-link {
+                            display: block;
+                            text-align: center;
+                            color: #007BFF;
+                            text-decoration: none;
+                            margin-top: 20px;
+                            padding: 10px;
+                        }
+
+                        /* 移动端适配 */
+                        @media screen and (max-width: 768px) {
+                            .container {
+                                margin: 10px;
+                                padding: 15px;
+                            }
+                            h1 {
+                                font-size: 20px;
+                                margin-bottom: 20px;
+                            }
+                            .input-group {
+                                padding: 15px;
+                                margin: 15px 0;
+                            }
+                            .button-group {
+                                flex-direction: column;
+                            }
+                            button {
+                                width: 100%;
+                                margin: 5px 0;
+                            }
+                            input[type="date"],
+                            input[type="number"],
+                            select {
+                                font-size: 16px;
+                                -webkit-appearance: none;
+                            }
+                        }
+
+                        /* 触摸设备优化 */
+                        @media (hover: none) {
+                            button:active {
+                                opacity: 0.8;
+                                transform: scale(0.98);
+                            }
+                            .back-link:active {
+                                background: #f0f0f0;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>保质期计算器</h1>
+                        <div class="input-group">
+                            <label for="productDate">生产日期</label>
+                            <input type="date" id="productDate">
+                        </div>
+                        <div class="input-group">
+                            <label>保质期</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" id="expiryValue" min="1" value="12" style="flex: 2;">
+                                <select id="expiryUnit" style="flex: 1;">
+                                    <option value="months">月</option>
+                                    <option value="days">天</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="result"></div>
+                        <div class="button-group">
+                            <button onclick="calculateExpiry()">计算</button>
+                            <button onclick="resetForm()">重置</button>
+                        </div>
+                        <a href="/" class="back-link">返回首页</a>
+                    </div>
+                    <script>
+                        // 计算函数
+                        function calculateExpiry() {
+                                const productDate = new Date(document.getElementById('productDate').value);
+                                const value = parseInt(document.getElementById('expiryValue').value);
+                                const unit = document.getElementById('expiryUnit').value;
+                                
+                                if(isNaN(productDate.getTime())) {
+                                    alert('请选择生产日期');
+                                    return;
+                                }
+                                
+                                const expiryDate = new Date(productDate);
+                                if(unit === 'months') {
+                                    expiryDate.setMonth(expiryDate.getMonth() + value);
+                                } else {
+                                    expiryDate.setDate(expiryDate.getDate() + value);
+                                }
+                                
+                                const result = document.getElementById('result');
+                                result.innerHTML = '<div style="background: #e8f5e9; padding: 15px; border-radius: 6px; color: #2e7d32;">' +
+                                    '到期日期: ' + expiryDate.toLocaleDateString() +
+                                '</div>';
+                        }
+
+                        // 重置函数
+                        function resetForm() {
+                            document.getElementById('productDate').value = '';
+                            document.getElementById('expiryValue').value = '12';
+                            document.getElementById('expiryUnit').value = 'months';
+                            document.getElementById('result').innerHTML = '';
+                        }
+                            
+                            // 添加按钮悬停效果
+                                const buttons = document.querySelectorAll('button');
+                                buttons.forEach(button => {
+                                    button.addEventListener('mouseover', () => {
+                                        button.style.opacity = '0.9';
+                                        button.style.transform = 'translateY(-1px)';
+                                    });
+                                    button.addEventListener('mouseout', () => {
+                                        button.style.opacity = '1';
+                                        button.style.transform = 'translateY(0)';
+                                    });
+                                });
+                    </script>
+                </body>
+                </html>
+            `, {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            });
+
+        case '/hotspot':
+            return new Response(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>今日热点</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background-color: #f4f4f4; 
+                        }
+                        .container {
+                            max-width: 760px;
+                            margin: 20px auto;
+                            padding: 20px;
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+                        }
+                        h1, h2 {
+                            color: #333;
+                            text-align: center;
+                        }
+                        .hotspot-container {
+                            display: flex;
+                            gap: 20px;
+                            margin: 20px 0;
+                        }
+                        .hotspot-section {
+                            flex: 1;
+                            background: #f8f9fa;
+                            padding: 15px;
+                            border-radius: 8px;
+                        }
+                        ul {
+                            list-style: none;
+                            padding: 0;
+                            margin: 0;
+                        }
+                        li {
+                            padding: 10px;
+                            border-bottom: 1px solid #eee;
+                            font-size: 14px;
+                            line-height: 1.4;
+                        }
+                        .back-link {
+                            display: block;
+                            text-align: center;
+                            color: #007BFF;
+                            text-decoration: none;
+                            margin-top: 20px;
+                            padding: 10px;
+                        }
+                        .loading {
+                            text-align: center;
+                            padding: 20px;
+                        }
+                        .loading .spinner {
+                            border: 4px solid #f3f3f3;
+                            border-top: 4px solid #3498db;
+                            border-radius: 50%;
+                            width: 40px;
+                            height: 40px;
+                            animation: spin 1s linear infinite;
+                            margin: 0 auto;
+                        }
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+
+                        /* 移动端适配 */
+                        @media screen and (max-width: 768px) {
+                            .container {
+                                margin: 10px;
+                                padding: 15px;
+                            }
+                            .hotspot-container {
+                                flex-direction: column;
+                                gap: 15px;
+                            }
+                            h1 {
+                                font-size: 20px;
+                            }
+                            h2 {
+                                font-size: 18px;
+                            }
+                            li {
+                                padding: 12px 10px;
+                                font-size: 15px;
+                            }
+                            .hotspot-section {
+                                padding: 10px;
+                            }
+                        }
+
+                        /* 触摸设备优化 */
+                        @media (hover: none) {
+                            li:active {
+                                background: #f0f0f0;
+                            }
+                            .back-link:active {
+                                background: #f0f0f0;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>今日热点</h1>
+                        <div id="content">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                        <a href="/" class="back-link">返回首页</a>
+                    </div>
+                    <script>
+                        async function fetchHotspotData() {
+                            try {
+                                const [bilibiliResponse, zhihuResponse, douyinResponse] = await Promise.all([
+                                    fetch('https://uapis.cn/api/hotlist?type=bilibili'),
+                                    fetch('https://uapis.cn/api/hotlist?type=zhihu'),
+                                    fetch('https://uapis.cn/api/hotlist?type=douyin')
+                                ]);
+
+                                const [bilibiliData, zhihuData, douyinData] = await Promise.all([
+                                    bilibiliResponse.json(),
+                                    zhihuResponse.json(),
+                                    douyinResponse.json()
+                                ]);
+
+                                const content = document.getElementById('content');
+                                content.innerHTML = \`
+                                    <div class="hotspot-container">
+                                        <div class="hotspot-section">
+                                            <h2>哔哩哔哩热搜</h2>
+                                            <ul>
+                                                \${bilibiliData.data.slice(0, 20).map(item => \`
+                                                    <li>\${item.title}</li>
+                                                \`).join('')}
+                                            </ul>
+                                        </div>
+                                        <div class="hotspot-section">
+                                            <h2>知乎热搜</h2>
+                                            <ul>
+                                                \${zhihuData.data.slice(0, 20).map(item => \`
+                                                    <li>\${item.title}</li>
+                                                \`).join('')}
+                                            </ul>
+                                        </div>
+                                        <div class="hotspot-section">
+                                            <h2>抖音热搜</h2>
+                                            <ul>
+                                                \${douyinData.data.slice(0, 20).map(item => \`
+                                                    <li>\${item.title}</li>
+                                                \`).join('')}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                \`;
+                            } catch (error) {
+                                console.error('获取数据失败:', error);
+                                document.getElementById('content').innerHTML = '<p style="text-align: center; color: #dc3545;">加载失败，请稍后重试</p>';
+                            }
+                        }
+
+                        fetchHotspotData();
+                    </script>
+                </body>
+                </html>
+            `, {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            });
+
+        case '/history':
+            return new Response(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>那年今日</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background-color: #f4f4f4; 
+                        }
+                        .container {
+                            max-width: 760px;
+                            margin: 20px auto;
+                            padding: 20px;
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+                        }
+                        h1 {
+                            color: #333;
+                            text-align: center;
+                            margin-bottom: 30px;
+                        }
+                        .history-list {
+                            padding: 0;
+                            margin: 0;
+                        }
+                        .history-item {
+                            padding: 15px;
+                            margin: 10px 0;
+                            background: #f8f9fa;
+                            border-radius: 8px;
+                            line-height: 1.5;
+                            transition: all 0.3s ease;
+                        }
+                        .back-link {
+                            display: block;
+                            text-align: center;
+                            color: #007BFF;
+                            text-decoration: none;
+                            margin-top: 20px;
+                            padding: 10px;
+                            border-radius: 6px;
+                        }
+                        .loading {
+                            text-align: center;
+                            padding: 20px;
+                        }
+                        .loading .spinner {
+                            border: 4px solid #f3f3f3;
+                            border-top: 4px solid #3498db;
+                            border-radius: 50%;
+                            width: 40px;
+                            height: 40px;
+                            animation: spin 1s linear infinite;
+                            margin: 0 auto 10px;
+                        }
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+
+                        /* 移动端适配 */
+                        @media screen and (max-width: 768px) {
+                            .container {
+                                margin: 10px;
+                                padding: 15px;
+                                border-radius: 8px;
+                            }
+                            h1 {
+                                font-size: 20px;
+                                margin-bottom: 20px;
+                            }
+                            .history-item {
+                                padding: 12px;
+                                font-size: 15px;
+                                margin: 8px 0;
+                            }
+                        }
+
+                        /* 触摸设备优化 */
+                        @media (hover: none) {
+                            .history-item:active {
+                                background: #e9ecef;
+                                transform: scale(0.99);
+                            }
+                            .back-link:active {
+                                background: #f0f0f0;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>历史上的今天</h1>
+                        <div id="content">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                        <a href="/" class="back-link">返回首页</a>
+                    </div>
+                    <script>
+                        async function fetchHistoryData() {
+                            try {
+                                const response = await fetch('https://uapis.cn/api/hotlist?type=history');
+                                const data = await response.json();
+                                
+                                const content = document.getElementById('content');
+                                content.innerHTML = \`
+                                    <div class="history-list">
+                                        \${data.data.slice(0, 20).map(item => \`
+                                            <div class="history-item">\${item.title}</div>
+                                        \`).join('')}
+                                    </div>
+                                \`;
+                            } catch (error) {
+                                console.error('获取数据失败:', error);
+                                document.getElementById('content').innerHTML = 
+                                    '<p style="text-align: center; color: #dc3545; padding: 20px;">加载失败，请稍后重试</p>';
+                            }
+                        }
+
+                        fetchHistoryData();
+                    </script>
+                </body>
+                </html>
+            `, {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            });
+
+        default:
+            return new Response(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>TOOLS</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background-color: #f4f4f4; 
+                        }
+                        .container { 
+                            max-width: 760px; 
+                            margin: 20px auto; 
+                            padding: 20px;
+                            overflow: hidden;
+                        }
+                        h1 {
+                            text-align: center;
+                            color: #333;
+                            margin-bottom: 30px;
+                            font-size: 24px;
+                        }
+                        .module {
+                            float: left;
+                            width: calc(32% - 4px);
+                            margin: 5px;
+                            padding: 15px 0;
+                            background: white;
+                            border-radius: 8px;
+                            text-decoration: none;
+                            color: #333;
+                            text-align: center;
+                            transition: all 0.3s ease;
+                            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        .module:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                            background: #007bff;
+                            color: white;
+                        }
+                        .module::after {
+                            content: '';
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 3px;
+                            background: #007bff;
+                            transform: scaleX(0);
+                            transition: transform 0.3s ease;
+                        }
+                        .module:hover::after {
+                            transform: scaleX(1);
+                        }
+                        .clearfix::after {
+                            content: "";
+                            clear: both;
+                            display: table;
+                        }
+
+                        /* 移动端响应式样式 */
+                        @media screen and (max-width: 768px) {
+                            .container {
+                                margin: 10px;
+                                padding: 10px;
+                            }
+                            h1 {
+                                font-size: 20px;
+                                margin-bottom: 20px;
+                            }
+                            .module {
+                                width: calc(50% - 4px); /* 两列布局 */
+                                padding: 12px 0;
+                                font-size: 14px;
+                                margin-bottom: 4px;
+                            }
+                        }
+
+                        @media screen and (max-width: 480px) {
+                            .container {
+                                margin: 5px;
+                                padding: 5px;
+                            }
+                            h1 {
+                                font-size: 18px;
+                                margin-bottom: 15px;
+                            }
+                            .module {
+                                width: calc(100% - 4px); /* 单列布局 */
+                                padding: 15px 0;
+                                margin-bottom: 6px;
+                                font-size: 16px;
+                            }
+                            /* 移动端触摸反馈 */
+                            .module:active {
+                                background: #007bff;
+                                color: white;
+                                transform: scale(0.98);
+                            }
+                        }
+
+                        /* 优化触摸体验 */
+                        @media (hover: none) {
+                            .module:hover {
+                                transform: none;
+                            }
+                            .module:active {
+                                background: #007bff;
+                                color: white;
+                                transform: scale(0.98);
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>简易 TOOLS</h1>
+                        <div class="clearfix">
+                            <a href="/encode" class="module">URL转码</a>
+                            <a href="/hotspot" class="module">今日热点</a>
+                            <a href="/history" class="module">那年今日</a>
+                            <a href="#" onclick="goToRealtime(event)" class="module">实时线报</a>
+                            <a href="/bzq" class="module">保质期</a>
+                        </div>
+                    </div>
+                    <script>
+                        function goToRealtime(event) {
+                            event.preventDefault();
+                            const currentUrl = window.location.href;
+                            const httpUrl = currentUrl.replace('https://', 'http://') + 'realtime';
+                            window.location.href = httpUrl;
+                        }
+                    </script>
+                </body>
+                </html>
+            `, {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            });
+    }
 }
