@@ -385,7 +385,7 @@ async function handleRequest(request) {
                             }
                         }
 
-                        // 默认赚客数据
+                        // 默认赚客据
                         fetchData('http://new.ixbk.net/plus/json/push_16.json', '赚客吧');
                     </script>
                 </body>
@@ -650,7 +650,7 @@ async function handleRequest(request) {
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>保质期</label>
+                            <label>质期</label>
                             <div class="input-wrapper">
                                 <input type="number" id="expiryValue" min="1" value="12">
                                 <select id="expiryUnit">
@@ -1173,6 +1173,528 @@ async function handleRequest(request) {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
 
+        case '/bmi':
+            return new Response(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>BMI计算器</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background-color: #f4f4f4; 
+                        }
+                        .container {
+                            max-width: 760px;
+                            margin: 20px auto;
+                            padding: 30px;
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+                        }
+                        h1 {
+                            color: #333;
+                            text-align: center;
+                            margin-bottom: 30px;
+                        }
+                        .input-group {
+                            margin: 15px 0;
+                            background: #f8f9fa;
+                            padding: 20px;
+                            border-radius: 8px;
+                        }
+                        label {
+                            display: block;
+                            margin-bottom: 10px;
+                            color: #555;
+                            font-weight: bold;
+                        }
+                        input[type="number"] {
+                            width: 100%;
+                            padding: 12px;
+                            border: 1px solid #ddd;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            box-sizing: border-box;
+                        }
+                        .button-group {
+                            display: flex;
+                            justify-content: center;
+                            gap: 15px;
+                            margin-top: 20px;
+                        }
+                        button {
+                            padding: 12px 30px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            min-width: 120px;
+                        }
+                        button:first-child {
+                            background: #007bff;
+                            color: white;
+                        }
+                        button:last-child {
+                            background: #6c757d;
+                            color: white;
+                        }
+                        #result {
+                            margin: 20px 0;
+                            padding: 20px;
+                            border-radius: 8px;
+                            text-align: center;
+                            font-size: 18px;
+                            display: none;
+                        }
+                        .back-link {
+                            display: block;
+                            text-align: center;
+                            color: #007BFF;
+                            text-decoration: none;
+                            margin-top: 20px;
+                            padding: 10px;
+                        }
+                        .normal { background-color: #d4edda; color: #155724; }
+                        .overweight { background-color: #fff3cd; color: #856404; }
+                        .obese { background-color: #f8d7da; color: #721c24; }
+                        .underweight { background-color: #cce5ff; color: #004085; }
+
+                        @media screen and (max-width: 768px) {
+                            .container {
+                                margin: 10px;
+                                padding: 15px;
+                            }
+                            h1 {
+                                font-size: 20px;
+                            }
+                            .input-group {
+                                padding: 15px;
+                            }
+                            button {
+                                width: 100%;
+                            }
+                            .button-group {
+                                flex-direction: column;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>BMI计算器</h1>
+                        <div class="input-group">
+                            <label for="height">身高 (cm)</label>
+                            <input type="number" id="height" min="100" max="999" step="0.1" placeholder="请输入身高(100-999)">
+                        </div>
+                        <div class="input-group">
+                            <label for="weight">体重 (kg)</label>
+                            <input type="number" id="weight" min="20" max="999" step="0.1" placeholder="请输入体重(20-999)">
+                        </div>
+                        <div id="result"></div>
+                        <div class="button-group">
+                            <button onclick="calculateBMI()">计算</button>
+                            <button onclick="resetForm()">重置</button>
+                        </div>
+                        <a href="/" class="back-link">返回首页</a>
+                    </div>
+                    <script>
+                        function calculateBMI() {
+                            const height = document.getElementById('height').value;
+                            const weight = document.getElementById('weight').value;
+                            const result = document.getElementById('result');
+
+                            // 验证输入
+                            if (!height || !weight) {
+                                alert('请输入身高和体重');
+                                return;
+                            }
+
+                            // 验证身高范围
+                            if (height < 100 || height > 999) {
+                                alert('身高必须在100-999cm之间');
+                                return;
+                            }
+
+                            // 验证体重范围
+                            if (weight < 20 || weight > 999) {
+                                alert('体重必须在20-999kg之间');
+                                return;
+                            }
+
+                            // 验证小数位数
+                            if (weight.toString().includes('.') && weight.toString().split('.')[1].length > 1) {
+                                alert('体重最多保留一位小数');
+                                return;
+                            }
+
+                            // 计算BMI
+                            const heightInMeters = height / 100;
+                            const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+                            
+                            // 确定BMI范围和对应的类
+                            let category, cssClass;
+                            if (bmi < 18.5) {
+                                category = '偏瘦';
+                                cssClass = 'underweight';
+                            } else if (bmi >= 18.5 && bmi < 24) {
+                                category = '正常';
+                                cssClass = 'normal';
+                            } else if (bmi >= 24 && bmi < 28) {
+                                category = '偏胖';
+                                cssClass = 'overweight';
+                            } else {
+                                category = '肥胖';
+                                cssClass = 'obese';
+                            }
+
+                            // 显示结果
+                            result.style.display = 'block';
+                            result.className = cssClass;
+                            result.innerHTML = \`
+                                您的BMI指数为: \${bmi}<br>
+                                身体状态: \${category}
+                            \`;
+                        }
+
+                        function resetForm() {
+                            document.getElementById('height').value = '';
+                            document.getElementById('weight').value = '';
+                            document.getElementById('result').style.display = 'none';
+                        }
+
+                        // 限制输入
+                        document.getElementById('height').addEventListener('input', function(e) {
+                            if (this.value.includes('.')) {
+                                let parts = this.value.split('.');
+                                if (parts[0].length > 3) {
+                                    parts[0] = parts[0].slice(0, 3);
+                                }
+                                if (parts[1] && parts[1].length > 1) {
+                                    parts[1] = parts[1].slice(0, 1);
+                                }
+                                this.value = parts.join('.');
+                            } else if (this.value.length > 3) {
+                                this.value = this.value.slice(0, 3);
+                            }
+                        });
+
+                        document.getElementById('weight').addEventListener('input', function(e) {
+                            if (this.value.includes('.')) {
+                                let parts = this.value.split('.');
+                                if (parts[0].length > 3) {
+                                    parts[0] = parts[0].slice(0, 3);
+                                }
+                                if (parts[1] && parts[1].length > 1) {
+                                    parts[1] = parts[1].slice(0, 1);
+                                }
+                                this.value = parts.join('.');
+                            } else if (this.value.length > 3) {
+                                this.value = this.value.slice(0, 3);
+                            }
+                        });
+                    </script>
+                </body>
+                </html>
+            `, {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            });
+
+        case '/tdee':
+            return new Response(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>TDEE计算器</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0; 
+                            padding: 0; 
+                            background-color: #f4f4f4; 
+                        }
+                        .container {
+                            max-width: 760px;
+                            margin: 20px auto;
+                            padding: 30px;
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+                        }
+                        h1 {
+                            color: #333;
+                            text-align: center;
+                            margin-bottom: 30px;
+                        }
+                        .input-group {
+                            margin: 15px 0;
+                            background: #f8f9fa;
+                            padding: 20px;
+                            border-radius: 8px;
+                        }
+                        label {
+                            display: block;
+                            margin-bottom: 10px;
+                            color: #555;
+                            font-weight: bold;
+                        }
+                        input[type="number"], select {
+                            width: 100%;
+                            padding: 12px;
+                            border: 1px solid #ddd;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            box-sizing: border-box;
+                        }
+                        .radio-group {
+                            display: flex;
+                            gap: 20px;
+                            margin: 10px 0;
+                        }
+                        .radio-label {
+                            display: flex;
+                            align-items: center;
+                            gap: 5px;
+                            cursor: pointer;
+                        }
+                        .button-group {
+                            display: flex;
+                            justify-content: center;
+                            gap: 15px;
+                            margin-top: 20px;
+                        }
+                        button {
+                            padding: 12px 30px;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            min-width: 120px;
+                        }
+                        button:first-child {
+                            background: #007bff;
+                            color: white;
+                        }
+                        button:last-child {
+                            background: #6c757d;
+                            color: white;
+                        }
+                        #result {
+                            margin: 20px 0;
+                            padding: 20px;
+                            border-radius: 8px;
+                            text-align: center;
+                            font-size: 18px;
+                            display: none;
+                            background-color: #e8f5e9;
+                            color: #2e7d32;
+                        }
+                        .back-link {
+                            display: block;
+                            text-align: center;
+                            color: #007BFF;
+                            text-decoration: none;
+                            margin-top: 20px;
+                            padding: 10px;
+                        }
+                        .info-text {
+                            font-size: 14px;
+                            color: #666;
+                            margin-top: 5px;
+                        }
+
+                        @media screen and (max-width: 768px) {
+                            .container {
+                                margin: 10px;
+                                padding: 15px;
+                            }
+                            h1 {
+                                font-size: 20px;
+                            }
+                            .input-group {
+                                padding: 15px;
+                            }
+                            .radio-group {
+                                flex-direction: column;
+                                gap: 10px;
+                            }
+                            button {
+                                width: 100%;
+                            }
+                            .button-group {
+                                flex-direction: column;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>TDEE计算器</h1>
+                        <div class="input-group">
+                            <label for="age">年龄</label>
+                            <input type="number" id="age" min="1" max="120" placeholder="请输入年龄(1-120)">
+                        </div>
+                        <div class="input-group">
+                            <label>性别</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="gender" value="male" checked> 男性
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="gender" value="female"> 女性
+                                </label>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="height">身高 (cm)</label>
+                            <input type="number" id="height" step="0.1" placeholder="请输入身高(100-999)">
+                        </div>
+                        <div class="input-group">
+                            <label for="weight">体重 (kg)</label>
+                            <input type="number" id="weight" step="0.1" placeholder="请输入体重(20-999)">
+                        </div>
+                        <div class="input-group">
+                            <label for="activity">活动水平</label>
+                            <select id="activity">
+                                <option value="1.2">久坐不动 (几乎不运动)</option>
+                                <option value="1.375">轻度活动 (每周运动1-3次)</option>
+                                <option value="1.55">中度活动 (每周运动3-5次)</option>
+                                <option value="1.725">高度活动 (每周运动6-7次)</option>
+                                <option value="1.9">专业运动 (每天训练2次以上)</option>
+                            </select>
+                            <div class="info-text">请根据您的日常活动水平选择合适的选项</div>
+                        </div>
+                        <div id="result"></div>
+                        <div class="button-group">
+                            <button onclick="calculateTDEE()">计算</button>
+                            <button onclick="resetForm()">重置</button>
+                        </div>
+                        <a href="/" class="back-link">返回首页</a>
+                    </div>
+                    <script>
+                        function calculateTDEE() {
+                            const age = parseFloat(document.getElementById('age').value);
+                            const gender = document.querySelector('input[name="gender"]:checked').value;
+                            const height = parseFloat(document.getElementById('height').value);
+                            const weight = parseFloat(document.getElementById('weight').value);
+                            const activity = parseFloat(document.getElementById('activity').value);
+                            const result = document.getElementById('result');
+
+                            // 验证输入
+                            if (!age || !height || !weight) {
+                                alert('请填写所有必填项');
+                                return;
+                            }
+
+                            // 验证年龄范围
+                            if (age < 1 || age > 120) {
+                                alert('年龄必须在1-120岁之间');
+                                return;
+                            }
+
+                            // 验证身高范围和小数位数
+                            if (height < 100 || height > 999) {
+                                alert('身高必须在100-999cm之间');
+                                return;
+                            }
+                            if (height.toString().includes('.') && height.toString().split('.')[1].length > 1) {
+                                alert('身高最多保留一位小数');
+                                return;
+                            }
+
+                            // 验证体重范围和小数位数
+                            if (weight < 20 || weight > 999) {
+                                alert('体重必须在20-999kg之间');
+                                return;
+                            }
+                            if (weight.toString().includes('.') && weight.toString().split('.')[1].length > 1) {
+                                alert('体重最多保留一位小数');
+                                return;
+                            }
+
+                            // 计算基础代谢率(BMR)
+                            let bmr;
+                            if (gender === 'male') {
+                                bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+                            } else {
+                                bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+                            }
+
+                            // 计算TDEE
+                            const tdee = Math.round(bmr * activity);
+
+                            // 显示结果
+                            result.style.display = 'block';
+                            result.innerHTML = \`
+                                <div>您的基础代谢率(BMR)：\${Math.round(bmr)} 卡路里/天</div>
+                                <div style="margin-top:10px">您的每日消耗热量(TDEE)：\${tdee} 卡路里/天</div>
+                                <div style="margin-top:15px;font-size:14px;color:#666">
+                                    * BMR是身体在完全静息状态下维持基本生命活动所需的能量<br>
+                                    * TDEE是根据您的活动水平计算的每日总能量消耗
+                                </div>
+                            \`;
+                        }
+
+                        function resetForm() {
+                            document.getElementById('age').value = '';
+                            document.getElementById('height').value = '';
+                            document.getElementById('weight').value = '';
+                            document.getElementById('activity').value = '1.2';
+                            document.querySelector('input[value="male"]').checked = true;
+                            document.getElementById('result').style.display = 'none';
+                        }
+
+                        // 限制输入
+                        document.getElementById('age').addEventListener('input', function(e) {
+                            if (this.value.length > 3) {
+                                this.value = this.value.slice(0, 3);
+                            }
+                        });
+
+                        document.getElementById('height').addEventListener('input', function(e) {
+                            if (this.value.includes('.')) {
+                                let parts = this.value.split('.');
+                                if (parts[0].length > 3) {
+                                    parts[0] = parts[0].slice(0, 3);
+                                }
+                                if (parts[1] && parts[1].length > 1) {
+                                    parts[1] = parts[1].slice(0, 1);
+                                }
+                                this.value = parts.join('.');
+                            } else if (this.value.length > 3) {
+                                this.value = this.value.slice(0, 3);
+                            }
+                        });
+
+                        document.getElementById('weight').addEventListener('input', function(e) {
+                            if (this.value.includes('.')) {
+                                let parts = this.value.split('.');
+                                if (parts[0].length > 3) {
+                                    parts[0] = parts[0].slice(0, 3);
+                                }
+                                if (parts[1] && parts[1].length > 1) {
+                                    parts[1] = parts[1].slice(0, 1);
+                                }
+                                this.value = parts.join('.');
+                            } else if (this.value.length > 3) {
+                                this.value = this.value.slice(0, 3);
+                            }
+                        });
+                    </script>
+                </body>
+                </html>
+            `, {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            });
+
         default:
             return new Response(`
                 <!DOCTYPE html>
@@ -1283,6 +1805,8 @@ async function handleRequest(request) {
                             <a href="/history" class="module">那年今日</a>
                             <a href="#" onclick="goToRealtime(event)" class="module">实时线报</a>
                             <a href="/bzq" class="module">保质期</a>
+                            <a href="/bmi" class="module">BMI计算</a>
+                            <a href="/tdee" class="module">TDEE计算</a>
                         </div>
                     </div>
                     <script>
