@@ -650,12 +650,12 @@ async function handleRequest(request) {
                             </div>
                         </div>
                         <div class="input-group">
-                            <label>质期</label>
+                            <label>保质期</label>
                             <div class="input-wrapper">
-                                <input type="number" id="expiryValue" min="1" value="12">
+                                <input type="number" id="expiryValue" min="1" max="365" value="30">
                                 <select id="expiryUnit">
+                                    <option value="days" selected>天</option>
                                     <option value="months">月</option>
-                                    <option value="days">天</option>
                                 </select>
                             </div>
                         </div>
@@ -762,10 +762,10 @@ async function handleRequest(request) {
                         }
 
                         function resetForm() {
-                            initDate(); // 重置为今天的日期
-                            document.getElementById('expiryValue').value = '12';
-                            document.getElementById('expiryUnit').value = 'months';
-                            document.getElementById('result').innerHTML = '';
+                            document.getElementById('productDate').value = new Date().toISOString().split('T')[0];
+                            document.getElementById('expiryValue').value = '30';
+                            document.getElementById('expiryUnit').value = 'days';
+                            document.getElementById('result').style.display = 'none';
                         }
 
                         // 阻止按钮点击事件冒泡
@@ -773,6 +773,29 @@ async function handleRequest(request) {
                             button.addEventListener('click', (e) => {
                                 e.stopPropagation();
                             });
+                        });
+
+                        // 添加输入限制处理
+                        document.getElementById('expiryValue').addEventListener('input', function(e) {
+                            const unit = document.getElementById('expiryUnit').value;
+                            if (unit === 'months') {
+                                if (this.value > 12) this.value = 12;
+                                if (this.value < 1) this.value = 1;
+                            } else {
+                                if (this.value > 365) this.value = 365;
+                                if (this.value < 1) this.value = 1;
+                            }
+                        });
+
+                        // 添加单位切换处理
+                        document.getElementById('expiryUnit').addEventListener('change', function(e) {
+                            const valueInput = document.getElementById('expiryValue');
+                            if (this.value === 'months') {
+                                if (valueInput.value > 12) valueInput.value = 12;
+                                valueInput.max = 12;
+                            } else {
+                                valueInput.max = 365;
+                            }
                         });
                     </script>
                 </body>
