@@ -3,6 +3,86 @@ addEventListener('fetch', event => {
     event.respondWith(handleRequest(event.request));
 });
 
+// 水印函数
+function wrapResponseWithWatermark(htmlContent) {
+    const watermarkCode = `
+        <style>
+            .watermark-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 0;
+                opacity: 0.08;
+            }
+            /* 确保所有交互元素在水印之上 */
+            .container, .module, .input-group, button, input, a, .settings {
+                position: relative;
+                z-index: 1;
+            }
+        </style>
+        <div class="watermark-container"></div>
+        <script>
+            window.addEventListener('load', function() {
+                const container = document.querySelector('.watermark-container');
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = 600;
+                canvas.height = 300;
+                
+                const largeIndex = Math.floor(Math.random() * 6);
+                
+                function createWatermark() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const now = new Date();
+                    const timeStr = now.toLocaleString('zh-CN');
+                    
+                    // 创建离屏 canvas 用于双缓冲
+                    const offscreenCanvas = document.createElement('canvas');
+                    offscreenCanvas.width = canvas.width;
+                    offscreenCanvas.height = canvas.height;
+                    const offscreenCtx = offscreenCanvas.getContext('2d');
+                    
+                    for(let row = 0; row < 2; row++) {
+                        for(let col = 0; col < 3; col++) {
+                            offscreenCtx.save();
+                            const currentIndex = row * 3 + col;
+                            offscreenCtx.translate(col * 200, row * 150);
+                            offscreenCtx.rotate(-15 * Math.PI / 180);
+                            
+                            offscreenCtx.font = currentIndex === largeIndex ? '16px Arial' : '12px Arial';
+                            offscreenCtx.fillStyle = 'rgba(0, 0, 0, 1)';
+                            
+                            offscreenCtx.fillText(window.location.hostname, 20, 40);
+                            offscreenCtx.fillText(timeStr, 20, 60);
+                            offscreenCtx.restore();
+                        }
+                    }
+                    
+                    // 将离屏 canvas 的内容一次性复制到主 canvas
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(offscreenCanvas, 0, 0);
+                    
+                    // 使用 requestAnimationFrame 更新背景
+                    requestAnimationFrame(() => {
+                        container.style.backgroundImage = \`url('\${canvas.toDataURL()}')\`;
+                        container.style.backgroundRepeat = 'repeat';
+                    });
+                }
+                
+                createWatermark();
+                // 降低更新频率到每秒一次
+                setInterval(createWatermark, 1000);
+            });
+        </script>
+    `;
+    
+    return htmlContent.replace('<body>', '<body>' + watermarkCode);
+}
+
 // 处理请求的函数
 async function handleRequest(request) {
     const url = new URL(request.url);
@@ -16,7 +96,7 @@ async function handleRequest(request) {
                 
                 if (originalUrl) {
                     const encodedUrl = encodeURIComponent(originalUrl);
-                    return new Response(`
+                    return new Response(wrapResponseWithWatermark(`
                         <!DOCTYPE html>
                         <html>
                         <head>
@@ -100,14 +180,14 @@ async function handleRequest(request) {
                             </div>
                         </body>
                         </html>
-                    `, {
+                    `), {
                         headers: { 'Content-Type': 'text/html; charset=utf-8' },
                     });
                 }
             }
 
             // GET 请求返回表单页面
-            return new Response(`
+            return new Response(wrapResponseWithWatermark(`
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -216,12 +296,12 @@ async function handleRequest(request) {
                     </div>
                 </body>
                 </html>
-            `, {
+            `), {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
 
         case '/realtime':
-            return new Response(`
+            return new Response(wrapResponseWithWatermark(`
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -390,12 +470,12 @@ async function handleRequest(request) {
                     </script>
                 </body>
                 </html>
-            `, {
+            `), {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
             
         case '/bzq':
-            return new Response(`
+            return new Response(wrapResponseWithWatermark(`
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -714,7 +794,7 @@ async function handleRequest(request) {
                                 expiryDate.setDate(expiryDate.getDate() + value);
                             }
 
-                            // 计算天数差异
+                            // 计算天数差���
                             const currentDate = new Date();
                             currentDate.setHours(0, 0, 0, 0);
                             const timeDiff = expiryDate.getTime() - currentDate.getTime();
@@ -800,12 +880,12 @@ async function handleRequest(request) {
                     </script>
                 </body>
                 </html>
-            `, {
+            `), {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
 
         case '/hotspot':
-            return new Response(`
+            return new Response(wrapResponseWithWatermark(`
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -1055,12 +1135,12 @@ async function handleRequest(request) {
                     </script>
                 </body>
                 </html>
-            `, {
+            `), {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
 
         case '/history':
-            return new Response(`
+            return new Response(wrapResponseWithWatermark(`
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -1192,12 +1272,12 @@ async function handleRequest(request) {
                     </script>
                 </body>
                 </html>
-            `, {
+            `), {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
 
         case '/bmi':
-            return new Response(`
+            return new Response(wrapResponseWithWatermark(`
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -1424,12 +1504,12 @@ async function handleRequest(request) {
                     </script>
                 </body>
                 </html>
-            `, {
+            `), {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
 
         case '/tdee':
-            return new Response(`
+            return new Response(wrapResponseWithWatermark(`
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -1714,12 +1794,320 @@ async function handleRequest(request) {
                     </script>
                 </body>
                 </html>
-            `, {
+            `), {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
 
+       // 在抖音解析页面的路由处理中
+       case '/douyin':
+        return new Response(wrapResponseWithWatermark(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>抖音视频解析</title>
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                <style>
+                    body { 
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        margin: 0; 
+                        padding: 0; 
+                        background-color: #f5f6fa;
+                        color: #2d3436;
+                    }
+                    .container { 
+                        max-width: 800px; 
+                        margin: 30px auto;
+                        padding: 25px;
+                        background: white;
+                        border-radius: 16px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                    }
+                    h1 {
+                        text-align: center;
+                        color: #2d3436;
+                        font-size: 28px;
+                        margin-bottom: 30px;
+                        font-weight: 600;
+                    }
+                    .input-group {
+                        margin: 25px 0;
+                        display: flex;
+                        gap: 12px;
+                        position: relative;
+                    }
+                    input {
+                        flex: 1;
+                        padding: 14px 20px;
+                        border: 2px solid #e1e1e1;
+                        border-radius: 12px;
+                        font-size: 16px;
+                        transition: all 0.3s ease;
+                        background: #f8f9fa;
+                    }
+                    input:focus {
+                        outline: none;
+                        border-color: #74b9ff;
+                        box-shadow: 0 0 0 3px rgba(116, 185, 255, 0.2);
+                    }
+                    button {
+                        padding: 14px 28px;
+                        background: #74b9ff;
+                        color: white;
+                        border: none;
+                        border-radius: 12px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+                    button:hover {
+                        background: #0984e3;
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 12px rgba(9, 132, 227, 0.2);
+                    }
+                    button:active {
+                        transform: translateY(0);
+                    }
+                    .loading {
+                        text-align: center;
+                        margin: 20px 0;
+                    }
+                    .spinner {
+                        width: 40px;
+                        height: 40px;
+                        border: 4px solid #f3f3f3;
+                        border-top: 4px solid #74b9ff;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                        margin: 0 auto;
+                    }
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                    .error-message {
+                        background: #fff3f3;
+                        color: #eb4d4b;
+                        padding: 15px;
+                        margin: 15px 0;
+                        border-radius: 12px;
+                        border-left: 4px solid #eb4d4b;
+                        font-size: 15px;
+                    }
+                    .success-message {
+                        background: #f0fff4;
+                        color: #00b894;
+                        padding: 15px;
+                        margin: 15px 0;
+                        border-radius: 12px;
+                        border-left: 4px solid #00b894;
+                        font-size: 15px;
+                    }
+                    #videoContainer {
+                        margin: 25px 0;
+                        border-radius: 16px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                    }
+                    #videoContainer video {
+                        width: 100%;
+                        display: block;
+                        background: #000;
+                    }
+                    #downloadBtn {
+                        width: 100%;
+                        margin-top: 20px;
+                        background: #00b894;
+                    }
+                    #downloadBtn:hover {
+                        background: #00a884;
+                    }
+                    .back-link {
+                        display: block;
+                        text-align: center;
+                        color: #74b9ff;
+                        text-decoration: none;
+                        margin-top: 25px;
+                        font-weight: 500;
+                        transition: all 0.3s ease;
+                    }
+                    .back-link:hover {
+                        color: #0984e3;
+                    }
+                    .instruction {
+                        background: #f8f9fa;
+                        padding: 20px;
+                        border-radius: 12px;
+                        margin: 20px 0;
+                        font-size: 15px;
+                        line-height: 1.6;
+                    }
+                    .instruction h3 {
+                        margin-top: 0;
+                        color: #2d3436;
+                    }
+                    .instruction ol {
+                        margin: 0;
+                        padding-left: 20px;
+                    }
+                    
+                    @media screen and (max-width: 768px) {
+                        .container {
+                            margin: 15px;
+                            padding: 20px;
+                        }
+                        h1 {
+                            font-size: 24px;
+                        }
+                        .input-group {
+                            flex-direction: column;
+                        }
+                        button {
+                            width: 100%;
+                            justify-content: center;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>抖音视频解析</h1>
+                    
+                    <div class="instruction">
+                        <h3>使用说明</h3>
+                        <ol>
+                            <li>打开抖音APP，点击要下载的视频右下角的"分享"按钮</li>
+                            <li>点击"复制链接"</li>
+                            <li>将复制的链接粘贴到上方输入框</li>
+                            <li>点击"解析"按钮即可</li>
+                        </ol>
+                    </div>
+    
+                    <div class="input-group">
+                        <input type="text" id="videoUrl" placeholder="请粘贴抖音视频链接">
+                        <button id="parseBtn">
+                            <i class="fas fa-search"></i>
+                            解析
+                        </button>
+                    </div>
+    
+                    <div id="loading" class="loading" style="display: none;">
+                        <div class="spinner"></div>
+                    </div>
+    
+                    <div id="resultContainer"></div>
+                    <div id="videoContainer"></div>
+                    
+                    <button id="downloadBtn" style="display: none;">
+                        <i class="fas fa-download"></i>
+                        下载视频
+                    </button>
+    
+                    <a href="/" class="back-link">
+                        <i class="fas fa-arrow-left"></i>
+                        返回首页
+                    </a>
+                </div>
+
+                <script>
+                    let currentVideoUrl = '';
+                    
+                    // 添加事件监听，而不是使用 onclick
+                    document.getElementById('parseBtn').addEventListener('click', async function() {
+                        const input = document.getElementById('videoUrl').value;
+                        const resultContainer = document.getElementById('resultContainer');
+                        const match = input.match(/https:\\/\\/[^\\s]+/);
+                        
+                        if (!match) {
+                            resultContainer.innerHTML = '<div class="error-message">请输入正确的抖音视频链接</div>';
+                            return;
+                        }
+                        
+                        const loading = document.getElementById('loading');
+                        loading.style.display = 'block';
+                        resultContainer.innerHTML = '';
+                        const videoContainer = document.getElementById('videoContainer');
+                        videoContainer.innerHTML = '';
+                        document.getElementById('downloadBtn').style.display = 'none';
+
+                        const url = match[0];
+                        const apiUrl = 'https://api.1sy.us.kg/dy?url=' + encodeURIComponent(url);
+
+                        try {
+                            const response = await fetch(apiUrl);
+                            const data = await response.json();
+                            
+                            if (data.data && data.data.dyurl) {
+                                try {
+                                    const redirectResponse = await fetch(data.data.dyurl, { method: 'HEAD' });
+                                    const realVideoUrl = redirectResponse.url;
+                                    currentVideoUrl = realVideoUrl;
+                                    
+                                    videoContainer.innerHTML = \`
+                                        <video controls style="max-width: 100%; height: auto;">
+                                            <source src="\${realVideoUrl}" type="video/mp4">
+                                            您的浏览器不支持视频标签
+                                        </video>\`;
+                                    document.getElementById('downloadBtn').style.display = 'block';
+                                    resultContainer.innerHTML = '<div class="success-message">解析成功！</div>';
+                                } catch (redirectError) {
+                                    console.error('Redirect Error:', redirectError);
+                                    resultContainer.innerHTML = '<div class="error-message">获取视频链接失败，请稍后重试</div>';
+                                }
+                            } else {
+                                resultContainer.innerHTML = '<div class="error-message">解析失败，请检查链接是否正确</div>';
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            resultContainer.innerHTML = '<div class="error-message">解析服务暂时不可用，请稍后重试</div>';
+                        } finally {
+                            loading.style.display = 'none';
+                        }
+                    });
+
+                    document.getElementById('downloadBtn').addEventListener('click', async function() {
+                        if (!currentVideoUrl) return;
+                        
+                        const resultContainer = document.getElementById('resultContainer');
+                        const loading = document.getElementById('loading');
+                        
+                        try {
+                            loading.style.display = 'block';
+                            resultContainer.innerHTML = '<div class="success-message">正在准备下载...</div>';
+
+                            const response = await fetch(currentVideoUrl);
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = '抖音视频.mp4';
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                            resultContainer.innerHTML = '<div class="success-message">下载已开始</div>';
+                        } catch (error) {
+                            console.error('Download error:', error);
+                            resultContainer.innerHTML = '<div class="error-message">下载失败，请稍后重试</div>';
+                        } finally {
+                            loading.style.display = 'none';
+                        }
+                    });
+                </script>
+            </body>
+            </html>
+        `), {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        });
+        
+
         default:
-            return new Response(`
+            return new Response(wrapResponseWithWatermark(`
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -1830,6 +2218,7 @@ async function handleRequest(request) {
                             <a href="/bzq" class="module">保质期</a>
                             <a href="/bmi" class="module">BMI计算</a>
                             <a href="/tdee" class="module">TDEE计算</a>
+                            <a href="/douyin" class="module">抖音解析</a>
                         </div>
                     </div>
                     <script>
@@ -1842,7 +2231,7 @@ async function handleRequest(request) {
                     </script>
                 </body>
                 </html>
-            `, {
+            `),{
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
     }
