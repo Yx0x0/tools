@@ -1,3 +1,55 @@
+// 添加在文件顶部,其他代码之前
+// 定义常量
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 毫秒
+
+// 重试函数
+async function fetchWithRetry(url, options = {}, maxRetries = MAX_RETRIES) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    ...options.headers
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response;
+        } catch (error) {
+            console.error(`Attempt ${i + 1} failed:`, error);
+            if (i === maxRetries - 1) throw error;
+            // 等待时间随重试次数增加
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (i + 1)));
+        }
+    }
+}
+
+// 代理请求处理函数
+async function handleProxyRequest(url) {
+    try {
+        const response = await fetchWithRetry(url);
+        const headers = new Headers(response.headers);
+        headers.set('Access-Control-Allow-Origin', '*');
+        headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        
+        return new Response(response.body, {
+            status: response.status,
+            headers: headers
+        });
+    } catch (error) {
+        console.error('Proxy error:', error);
+        return new Response('代理请求失败: ' + error.message, { 
+            status: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*'
+            }
+        });
+    }
+}
+
 // Cloudflare Workers 的入口
 addEventListener('fetch', event => {
     event.respondWith(handleRequest(event.request));
@@ -89,6 +141,18 @@ async function handleRequest(request) {
 
     // 路由处理
     switch (url.pathname) {
+        case '/proxy':
+            const targetUrl = url.searchParams.get('url');
+            if (!targetUrl) {
+                return new Response('缺少 url 参数', { 
+                    status: 400,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                });
+            }
+            return handleProxyRequest(targetUrl);
+
         case '/encode':
             if (request.method === 'POST') {
                 const formData = await request.formData();
@@ -794,7 +858,7 @@ async function handleRequest(request) {
                                 expiryDate.setDate(expiryDate.getDate() + value);
                             }
 
-                            // 计算天数差���
+                            // 计算天数差
                             const currentDate = new Date();
                             currentDate.setHours(0, 0, 0, 0);
                             const timeDiff = expiryDate.getTime() - currentDate.getTime();
@@ -1798,313 +1862,340 @@ async function handleRequest(request) {
                 headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
 
-       // 在抖音解析页面的路由处理中
-       case '/douyin':
-        return new Response(wrapResponseWithWatermark(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>抖音视频解析</title>
-                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-                <style>
-                    body { 
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        margin: 0; 
-                        padding: 0; 
-                        background-color: #f5f6fa;
-                        color: #2d3436;
-                    }
-                    .container { 
-                        max-width: 800px; 
-                        margin: 30px auto;
-                        padding: 25px;
-                        background: white;
-                        border-radius: 16px;
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-                    }
-                    h1 {
-                        text-align: center;
-                        color: #2d3436;
-                        font-size: 28px;
-                        margin-bottom: 30px;
-                        font-weight: 600;
-                    }
-                    .input-group {
-                        margin: 25px 0;
-                        display: flex;
-                        gap: 12px;
-                        position: relative;
-                    }
-                    input {
-                        flex: 1;
-                        padding: 14px 20px;
-                        border: 2px solid #e1e1e1;
-                        border-radius: 12px;
-                        font-size: 16px;
-                        transition: all 0.3s ease;
-                        background: #f8f9fa;
-                    }
-                    input:focus {
-                        outline: none;
-                        border-color: #74b9ff;
-                        box-shadow: 0 0 0 3px rgba(116, 185, 255, 0.2);
-                    }
-                    button {
-                        padding: 14px 28px;
-                        background: #74b9ff;
-                        color: white;
-                        border: none;
-                        border-radius: 12px;
-                        cursor: pointer;
-                        font-size: 16px;
-                        font-weight: 600;
-                        transition: all 0.3s ease;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
-                    button:hover {
-                        background: #0984e3;
-                        transform: translateY(-2px);
-                        box-shadow: 0 4px 12px rgba(9, 132, 227, 0.2);
-                    }
-                    button:active {
-                        transform: translateY(0);
-                    }
-                    .loading {
-                        text-align: center;
-                        margin: 20px 0;
-                    }
-                    .spinner {
-                        width: 40px;
-                        height: 40px;
-                        border: 4px solid #f3f3f3;
-                        border-top: 4px solid #74b9ff;
-                        border-radius: 50%;
-                        animation: spin 1s linear infinite;
-                        margin: 0 auto;
-                    }
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                    .error-message {
-                        background: #fff3f3;
-                        color: #eb4d4b;
-                        padding: 15px;
-                        margin: 15px 0;
-                        border-radius: 12px;
-                        border-left: 4px solid #eb4d4b;
-                        font-size: 15px;
-                    }
-                    .success-message {
-                        background: #f0fff4;
-                        color: #00b894;
-                        padding: 15px;
-                        margin: 15px 0;
-                        border-radius: 12px;
-                        border-left: 4px solid #00b894;
-                        font-size: 15px;
-                    }
-                    #videoContainer {
-                        margin: 25px 0;
-                        border-radius: 16px;
-                        overflow: hidden;
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-                    }
-                    #videoContainer video {
-                        width: 100%;
-                        display: block;
-                        background: #000;
-                    }
-                    #downloadBtn {
-                        width: 100%;
-                        margin-top: 20px;
-                        background: #00b894;
-                    }
-                    #downloadBtn:hover {
-                        background: #00a884;
-                    }
-                    .back-link {
-                        display: block;
-                        text-align: center;
-                        color: #74b9ff;
-                        text-decoration: none;
-                        margin-top: 25px;
-                        font-weight: 500;
-                        transition: all 0.3s ease;
-                    }
-                    .back-link:hover {
-                        color: #0984e3;
-                    }
-                    .instruction {
-                        background: #f8f9fa;
-                        padding: 20px;
-                        border-radius: 12px;
-                        margin: 20px 0;
-                        font-size: 15px;
-                        line-height: 1.6;
-                    }
-                    .instruction h3 {
-                        margin-top: 0;
-                        color: #2d3436;
-                    }
-                    .instruction ol {
-                        margin: 0;
-                        padding-left: 20px;
-                    }
-                    
-                    @media screen and (max-width: 768px) {
-                        .container {
-                            margin: 15px;
-                            padding: 20px;
+        case '/douyin':
+            return new Response(wrapResponseWithWatermark(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>抖音视频解析</title>
+                    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                    <style>
+                        body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            margin: 0; 
+                            padding: 0; 
+                            background-color: #f5f6fa;
+                            color: #2d3436;
+                        }
+                        .container { 
+                            max-width: 800px; 
+                            margin: 30px auto;
+                            padding: 25px;
+                            background: white;
+                            border-radius: 16px;
+                            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
                         }
                         h1 {
-                            font-size: 24px;
+                            text-align: center;
+                            color: #2d3436;
+                            font-size: 28px;
+                            margin-bottom: 30px;
+                            font-weight: 600;
                         }
                         .input-group {
-                            flex-direction: column;
+                            margin: 25px 0;
+                            display: flex;
+                            gap: 12px;
+                            position: relative;
+                        }
+                        input {
+                            flex: 1;
+                            padding: 14px 20px;
+                            border: 2px solid #e1e1e1;
+                            border-radius: 12px;
+                            font-size: 16px;
+                            transition: all 0.3s ease;
+                            background: #f8f9fa;
+                        }
+                        input:focus {
+                            outline: none;
+                            border-color: #74b9ff;
+                            box-shadow: 0 0 0 3px rgba(116, 185, 255, 0.2);
                         }
                         button {
+                            padding: 14px 28px;
+                            background: #74b9ff;
+                            color: white;
+                            border: none;
+                            border-radius: 12px;
+                            cursor: pointer;
+                            font-size: 16px;
+                            font-weight: 600;
+                            transition: all 0.3s ease;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        button:hover {
+                            background: #0984e3;
+                            transform: translateY(-2px);
+                            box-shadow: 0 4px 12px rgba(9, 132, 227, 0.2);
+                        }
+                        button:active {
+                            transform: translateY(0);
+                        }
+                        .loading {
+                            text-align: center;
+                            margin: 20px 0;
+                        }
+                        .spinner {
+                            width: 40px;
+                            height: 40px;
+                            border: 4px solid #f3f3f3;
+                            border-top: 4px solid #74b9ff;
+                            border-radius: 50%;
+                            animation: spin 1s linear infinite;
+                            margin: 0 auto;
+                        }
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                        .error-message {
+                            background: #fff3f3;
+                            color: #eb4d4b;
+                            padding: 15px;
+                            margin: 15px 0;
+                            border-radius: 12px;
+                            border-left: 4px solid #eb4d4b;
+                            font-size: 15px;
+                        }
+                        .success-message {
+                            background: #f0fff4;
+                            color: #00b894;
+                            padding: 15px;
+                            margin: 15px 0;
+                            border-radius: 12px;
+                            border-left: 4px solid #00b894;
+                            font-size: 15px;
+                        }
+                        #videoContainer {
+                            margin: 25px 0;
+                            border-radius: 16px;
+                            overflow: hidden;
+                            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                        }
+                        #videoContainer video {
                             width: 100%;
-                            justify-content: center;
+                            display: block;
+                            background: #000;
                         }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>抖音视频解析</h1>
-                    
-                    <div class="instruction">
-                        <h3>使用说明</h3>
-                        <ol>
-                            <li>打开抖音APP，点击要下载的视频右下角的"分享"按钮</li>
-                            <li>点击"复制链接"</li>
-                            <li>将复制的链接粘贴到上方输入框</li>
-                            <li>点击"解析"按钮即可</li>
-                        </ol>
-                    </div>
-    
-                    <div class="input-group">
-                        <input type="text" id="videoUrl" placeholder="请粘贴抖音视频链接">
-                        <button id="parseBtn">
-                            <i class="fas fa-search"></i>
-                            解析
-                        </button>
-                    </div>
-    
-                    <div id="loading" class="loading" style="display: none;">
-                        <div class="spinner"></div>
-                    </div>
-    
-                    <div id="resultContainer"></div>
-                    <div id="videoContainer"></div>
-                    
-                    <button id="downloadBtn" style="display: none;">
-                        <i class="fas fa-download"></i>
-                        下载视频
-                    </button>
-    
-                    <a href="/" class="back-link">
-                        <i class="fas fa-arrow-left"></i>
-                        返回首页
-                    </a>
-                </div>
-
-                <script>
-                    let currentVideoUrl = '';
-                    
-                    // 添加事件监听，而不是使用 onclick
-                    document.getElementById('parseBtn').addEventListener('click', async function() {
-                        const input = document.getElementById('videoUrl').value;
-                        const resultContainer = document.getElementById('resultContainer');
-                        const match = input.match(/https:\\/\\/[^\\s]+/);
-                        
-                        if (!match) {
-                            resultContainer.innerHTML = '<div class="error-message">请输入正确的抖音视频链接</div>';
-                            return;
+                        #downloadBtn {
+                            width: 100%;
+                            margin-top: 20px;
+                            background: #00b894;
+                        }
+                        #downloadBtn:hover {
+                            background: #00a884;
+                        }
+                        .back-link {
+                            display: block;
+                            text-align: center;
+                            color: #74b9ff;
+                            text-decoration: none;
+                            margin-top: 25px;
+                            font-weight: 500;
+                            transition: all 0.3s ease;
+                        }
+                        .back-link:hover {
+                            color: #0984e3;
+                        }
+                        .instruction {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            border-radius: 12px;
+                            margin: 20px 0;
+                            font-size: 15px;
+                            line-height: 1.6;
+                        }
+                        .instruction h3 {
+                            margin-top: 0;
+                            color: #2d3436;
+                        }
+                        .instruction ol {
+                            margin: 0;
+                            padding-left: 20px;
                         }
                         
-                        const loading = document.getElementById('loading');
-                        loading.style.display = 'block';
-                        resultContainer.innerHTML = '';
-                        const videoContainer = document.getElementById('videoContainer');
-                        videoContainer.innerHTML = '';
-                        document.getElementById('downloadBtn').style.display = 'none';
-
-                        const url = match[0];
-                        const apiUrl = 'https://api.1sy.us.kg/dy?url=' + encodeURIComponent(url);
-
-                        try {
-                            const response = await fetch(apiUrl);
-                            const data = await response.json();
-                            
-                            if (data.data && data.data.dyurl) {
-                                try {
-                                    const redirectResponse = await fetch(data.data.dyurl, { method: 'HEAD' });
-                                    const realVideoUrl = redirectResponse.url;
-                                    currentVideoUrl = realVideoUrl;
-                                    
-                                    videoContainer.innerHTML = \`
-                                        <video controls style="max-width: 100%; height: auto;">
-                                            <source src="\${realVideoUrl}" type="video/mp4">
-                                            您的浏览器不支持视频标签
-                                        </video>\`;
-                                    document.getElementById('downloadBtn').style.display = 'block';
-                                    resultContainer.innerHTML = '<div class="success-message">解析成功！</div>';
-                                } catch (redirectError) {
-                                    console.error('Redirect Error:', redirectError);
-                                    resultContainer.innerHTML = '<div class="error-message">获取视频链接失败，请稍后重试</div>';
-                                }
-                            } else {
-                                resultContainer.innerHTML = '<div class="error-message">解析失败，请检查链接是否正确</div>';
+                        @media screen and (max-width: 768px) {
+                            .container {
+                                margin: 15px;
+                                padding: 20px;
                             }
-                        } catch (error) {
-                            console.error('Error:', error);
-                            resultContainer.innerHTML = '<div class="error-message">解析服务暂时不可用，请稍后重试</div>';
-                        } finally {
-                            loading.style.display = 'none';
+                            h1 {
+                                font-size: 24px;
+                            }
+                            .input-group {
+                                flex-direction: column;
+                            }
+                            button {
+                                width: 100%;
+                                justify-content: center;
+                            }
                         }
-                    });
-
-                    document.getElementById('downloadBtn').addEventListener('click', async function() {
-                        if (!currentVideoUrl) return;
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>抖音视频解析</h1>
                         
-                        const resultContainer = document.getElementById('resultContainer');
-                        const loading = document.getElementById('loading');
-                        
-                        try {
-                            loading.style.display = 'block';
-                            resultContainer.innerHTML = '<div class="success-message">正在准备下载...</div>';
-
-                            const response = await fetch(currentVideoUrl);
-                            const blob = await response.blob();
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = '抖音视频.mp4';
-                            document.body.appendChild(a);
-                            a.click();
-                            window.URL.revokeObjectURL(url);
-                            document.body.removeChild(a);
-                            resultContainer.innerHTML = '<div class="success-message">下载已开始</div>';
-                        } catch (error) {
-                            console.error('Download error:', error);
-                            resultContainer.innerHTML = '<div class="error-message">下载失败，请稍后重试</div>';
-                        } finally {
-                            loading.style.display = 'none';
-                        }
-                    });
-                </script>
-            </body>
-            </html>
-        `), {
-            headers: { 'Content-Type': 'text/html; charset=utf-8' },
-        });
+                        <div class="instruction">
+                            <h3>使用说明</h3>
+                            <ol>
+                                <li>打开抖音APP，点击要下载的视频右下角的"分享"按钮</li>
+                                <li>点击"复制链接"</li>
+                                <li>将复制的链接粘贴到上方输入框</li>
+                                <li>点击"解析"按钮即可</li>
+                            </ol>
+                        </div>
         
+                        <div class="input-group">
+                            <input type="text" id="videoUrl" placeholder="请粘贴抖音视频链接">
+                            <button id="parseBtn">
+                                <i class="fas fa-search"></i>
+                                解析
+                            </button>
+                        </div>
+        
+                        <div id="loading" class="loading" style="display: none;">
+                            <div class="spinner"></div>
+                        </div>
+        
+                        <div id="resultContainer"></div>
+                        <div id="videoContainer"></div>
+                        
+                        <button id="downloadBtn" style="display: none;">
+                            <i class="fas fa-download"></i>
+                            下载视频
+                        </button>
+        
+                        <a href="/" class="back-link">
+                            <i class="fas fa-arrow-left"></i>
+                            返回首页
+                        </a>
+                    </div>
+
+                    <script>
+                        let currentVideoUrl = '';
+                        
+                        // 添加事件监听，而不是使用 onclick
+                        document.getElementById('parseBtn').addEventListener('click', async function() {
+                            const input = document.getElementById('videoUrl').value;
+                            const resultContainer = document.getElementById('resultContainer');
+                            const match = input.match(/https:\\/\\/[^\\s]+/);
+                            
+                            if (!match) {
+                                resultContainer.innerHTML = '<div class="error-message">请输入正确的抖音视频链接</div>';
+                                return;
+                            }
+                            
+                            const loading = document.getElementById('loading');
+                            loading.style.display = 'block';
+                            resultContainer.innerHTML = '';
+                            const videoContainer = document.getElementById('videoContainer');
+                            videoContainer.innerHTML = '';
+                            document.getElementById('downloadBtn').style.display = 'none';
+
+                            const url = match[0];
+                            const apiUrl = 'https://api.1sy.us.kg/dy?url=' + encodeURIComponent(url);
+                            const proxyUrl = \`/proxy?url=\${encodeURIComponent(apiUrl)}\`;
+
+                            try {
+                                const response = await fetch(apiUrl);
+                                const data = await response.json();
+                                
+                                if (data.data && data.data.dyurl) {
+                                    try {
+                                        const realVideoUrl = data.data.dyurl;
+                                        const proxyVideoUrl = \`/proxy?url=\${encodeURIComponent(realVideoUrl)}\`;
+                                        currentVideoUrl = proxyVideoUrl;
+
+                                        videoContainer.innerHTML = \`
+                                            <video controls style="max-width: 100%; height: auto;">
+                                                <source src="\${proxyVideoUrl}" type="video/mp4">
+                                                您的浏览器不支持视频标签
+                                            </video>\`;
+                                        document.getElementById('downloadBtn').style.display = 'block';
+                                        resultContainer.innerHTML = '<div class="success-message">解析成功！</div>';
+                                        
+                                        // 隐藏使用说明
+                                        document.querySelector('.instruction').style.display = 'none';
+                                    } catch (redirectError) {
+                                        console.error('Redirect Error:', redirectError);
+                                        resultContainer.innerHTML = '<div class="error-message">获取视频链接失败，请稍后重试</div>';
+                                        // 显示使用说明
+                                        document.querySelector('.instruction').style.display = 'block';
+                                    }
+                                } else {
+                                    resultContainer.innerHTML = '<div class="error-message">解析失败，请检查链接是否正确</div>';
+                                    // 显示使用说明
+                                    document.querySelector('.instruction').style.display = 'block';
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                resultContainer.innerHTML = '<div class="error-message">解析服务暂时不可用，请稍后重试</div>';
+                            } finally {
+                                loading.style.display = 'none';
+                            }
+                        });
+
+ 
+// 下载视频事件
+document.getElementById('downloadBtn').addEventListener('click', async function() {
+    const resultContainer = document.getElementById('resultContainer');
+    const loading = document.getElementById('loading');
+    
+    if (!currentVideoUrl) {
+        resultContainer.innerHTML = '<div class="error-message">没有可下载的视频</div>';
+        return;
+    }
+    
+    try {
+        loading.style.display = 'block';
+        resultContainer.innerHTML = '<div class="success-message">正在获取下载地址...</div>';
+
+        // 先获取重定向后的真实URL
+        const response = await fetch(currentVideoUrl, {
+            method: 'HEAD',
+            redirect: 'follow'
+        });
+
+        if (!response.ok) {
+            throw new Error('获取视频地址失败');
+        }
+
+        const finalUrl = response.url;
+        
+        // 创建一个新的 a 标签用于下载
+        const a = document.createElement('a');
+        a.href = finalUrl;
+        a.download = '抖音视频.mp4';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        resultContainer.innerHTML = \`
+            <div class="success-message">
+                下载已开始，如果没有自动下载，请点击<a href="\${finalUrl}" target="_blank">这里</a>直接下载
+            </div>\`;
+    } catch (error) {
+        console.error('Download error:', error);
+        resultContainer.innerHTML = '<div class="error-message">下载失败，请稍后重试</div>';
+    } finally {
+        loading.style.display = 'none';
+    }
+});
+
+                    </script>
+                </body>
+                </html>
+            `), {
+                headers: { 'Content-Type': 'text/html; charset=utf-8','Access-Control-Allow-Origin':'*' },
+            });
+            
 
         default:
             return new Response(wrapResponseWithWatermark(`
