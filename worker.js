@@ -1,12 +1,13 @@
 // 添加在文件顶部,其他代码之前
 // 定义常量
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 毫秒
+const MAX_RETRIES = 3;  // 最大重试次数
+const RETRY_DELAY = 1000;  // 重试延迟时间(毫秒)
 
-// 重试函数
+// 带重试机制的fetch函数
 async function fetchWithRetry(url, options = {}, maxRetries = MAX_RETRIES) {
     for (let i = 0; i < maxRetries; i++) {
         try {
+            // 发起请求并添加User-Agent
             const response = await fetch(url, {
                 ...options,
                 headers: {
@@ -32,8 +33,19 @@ async function handleProxyRequest(url) {
     try {
         const response = await fetchWithRetry(url);
         const headers = new Headers(response.headers);
+        // 设置CORS头
         headers.set('Access-Control-Allow-Origin', '*');
         headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        
+        // 为视频内容添加缓存控制
+        if (url.includes('.mp4') || url.includes('video')) {
+            headers.set('Cache-Control', 'public, max-age=14400'); // 4小时缓存
+            headers.set('CDN-Cache-Control', 'max-age=14400');
+            headers.set('Cloudflare-CDN-Cache-Control', 'max-age=14400');
+        } else {
+            // 对于非视频内容使用较短的缓存时间
+            headers.set('Cache-Control', 'public, max-age=300'); // 5分钟缓存
+        }
         
         return new Response(response.body, {
             status: response.status,
@@ -44,7 +56,8 @@ async function handleProxyRequest(url) {
         return new Response('代理请求失败: ' + error.message, { 
             status: 500,
             headers: {
-                'Access-Control-Allow-Origin': '*'
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'no-store' // 错误响应不缓存
             }
         });
     }
@@ -55,10 +68,11 @@ addEventListener('fetch', event => {
     event.respondWith(handleRequest(event.request));
 });
 
-// 水印函数
+// 水印函数 - 为HTML内容添加水印
 function wrapResponseWithWatermark(htmlContent) {
     const watermarkCode = `
         <style>
+            // 水印容器样式
             .watermark-container {
                 position: fixed;
                 top: 0;
@@ -69,7 +83,7 @@ function wrapResponseWithWatermark(htmlContent) {
                 z-index: 0;
                 opacity: 0.08;
             }
-            /* 确保所有交互元素在水印之上 */
+            // 确保所有交互元素在水印之上
             .container, .module, .input-group, button, input, a, .settings {
                 position: relative;
                 z-index: 1;
@@ -823,7 +837,7 @@ async function handleRequest(request) {
                             dateInput.addEventListener('change', function() {
                                 const selectedDate = new Date(this.value);
                                 const today = new Date();
-                                today.setHours(0, 0, 0, 0); // 设置时间为当天开始
+                                today.setHours(0, 0, 0, 0); // 设置时间为天开始
 
                                 if (selectedDate > today) {
                                     this.value = dateString;
@@ -2113,24 +2127,38 @@ async function handleRequest(request) {
                                         currentVideoUrl = proxyVideoUrl;
 
                                         videoContainer.innerHTML = \`
-                                            <video controls style="max-width: 100%; height: auto;">
+                                            <video controls style="max-width: 100%; height: auto; display: none;" onloadeddata="this.style.display='block'">
                                                 <source src="\${proxyVideoUrl}" type="video/mp4">
                                                 您的浏览器不支持视频标签
-                                            </video>\`;
+                                            </video>
+                                            <div class="video-loading" style="text-align: center; padding: 20px;">
+                                                <div class="spinner"></div>
+                                                <p style="color: #666;">视频加载中...</p>
+                                            </div>\`;
+
+                                        // 添加视频加载事件监听
+                                        const video = videoContainer.querySelector('video');
+                                        const loadingDiv = videoContainer.querySelector('.video-loading');
+                                        
+                                        video.addEventListener('loadeddata', function() {
+                                            loadingDiv.style.display = 'none';
+                                            video.style.display = 'block';
+                                        });
+
+                                        video.addEventListener('error', function() {
+                                            loadingDiv.innerHTML = '<p style="color: #dc3545;">视频加载失败，请重试</p>';
+                                        });
+
                                         document.getElementById('downloadBtn').style.display = 'block';
                                         resultContainer.innerHTML = '<div class="success-message">解析成功！</div>';
-                                        
-                                        // 隐藏使用说明
                                         document.querySelector('.instruction').style.display = 'none';
                                     } catch (redirectError) {
                                         console.error('Redirect Error:', redirectError);
                                         resultContainer.innerHTML = '<div class="error-message">获取视频链接失败，请稍后重试</div>';
-                                        // 显示使用说明
                                         document.querySelector('.instruction').style.display = 'block';
                                     }
                                 } else {
                                     resultContainer.innerHTML = '<div class="error-message">解析失败，请检查链接是否正确</div>';
-                                    // 显示使用说明
                                     document.querySelector('.instruction').style.display = 'block';
                                 }
                             } catch (error) {
