@@ -938,10 +938,10 @@ async function handleRequest(request) {
                             const unit = document.getElementById('expiryUnit').value;
                             if (unit === 'months') {
                                 if (this.value > 12) this.value = 12;
-                                if (this.value < 1) this.value = 1;
+                                if (this.value < 1) this.value = null;
                             } else {
                                 if (this.value > 365) this.value = 365;
-                                if (this.value < 1) this.value = 1;
+                                if (this.value < 1) this.value = null;
                             }
                         });
 
